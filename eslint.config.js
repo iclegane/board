@@ -1,6 +1,7 @@
 import { Linter } from 'eslint'
 import typescriptPlugin from '@typescript-eslint/eslint-plugin'
 import typescriptParser from '@typescript-eslint/parser'
+import eslintPluginImport from 'eslint-plugin-import'
 import reactPlugin from 'eslint-plugin-react'
 import reactHooksPlugin from 'eslint-plugin-react-hooks'
 import prettierPlugin from 'eslint-plugin-prettier'
@@ -26,6 +27,7 @@ const config = [
       react: reactPlugin,
       'react-hooks': reactHooksPlugin,
       prettier: prettierPlugin,
+      import: eslintPluginImport,
     },
     rules: {
       // ESLint's recommended rules
@@ -82,6 +84,23 @@ const config = [
       'react/prop-types': 'off',
       'react/react-in-jsx-scope': 'off',
       'prettier/prettier': ['error'],
+
+      'import/order': [
+        'warn',
+        {
+          groups: [
+            ['builtin', 'external'], // Встроенные и внешние модули
+            ['internal'], // Внутренние модули
+            ['parent', 'sibling', 'index'], // Родительские и соседние модули
+            ['object'], // Для всех объектов, например, импорты стилей
+          ],
+          'newlines-between': 'always', // Добавление пустой строки между группами
+          alphabetize: {
+            order: 'asc', // Сортировка по алфавиту
+            caseInsensitive: true, // Игнорирование регистра
+          },
+        },
+      ],
     },
   },
 ]
