@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react'
+
 import '@/components/App/App.css'
+import { Card } from '@/components'
 
 type PositionType = { x: number; y: number }
 
@@ -36,9 +38,6 @@ export const App: React.FC = () => {
   const handleBackPosition = (): void => {
     const { x, y } = lastCoordinatePosition.current
     setPosition({ x, y })
-
-    document.documentElement.style.setProperty('--background-x', `${x}px`)
-    document.documentElement.style.setProperty('--background-y', `${y}px`)
   }
 
   const handleWheel = (event: React.WheelEvent<HTMLDivElement>): void => {
@@ -67,6 +66,7 @@ export const App: React.FC = () => {
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
         onMouseDown={handleMouseDown}
+        onMouseLeave={() => setDragging(false)}
         onWheel={handleWheel}
         style={{
           cursor: dragging ? 'grabbing' : 'grab',
@@ -94,24 +94,22 @@ export const App: React.FC = () => {
             transformOrigin: 'center',
           }}
         >
-          <div
-            className='board-content'
-            style={{ transform: `translate(10px, 15px)` }}
-          >
-            target
-          </div>
-          <div
-            className='board-content'
-            style={{ transform: `translate(100px, 150px)` }}
-          >
-            target1
-          </div>
-          <div
-            className='board-content'
-            style={{ transform: `translate(320px, 125px)` }}
-          >
-            target2
-          </div>
+          <Card
+            name='Карточка 1'
+            scale={zoom}
+          />
+          <Card
+            name='Карточка 2'
+            scale={zoom}
+          />
+          <Card
+            name='Карточка 3'
+            scale={zoom}
+          />
+          <Card
+            name='Карточка 4'
+            scale={zoom}
+          />
         </div>
       </div>
     </div>
