@@ -29,21 +29,7 @@ export const App: React.FC = () => {
     const deltaX = event.clientX - lastClientPosition.current.x
     const deltaY = event.clientY - lastClientPosition.current.y
 
-    setPosition((prev) => {
-      const newPosition = { x: prev.x + deltaX, y: prev.y + deltaY }
-
-      document.documentElement.style.setProperty(
-        '--background-x',
-        `${newPosition.x}px`
-      )
-      document.documentElement.style.setProperty(
-        '--background-y',
-        `${newPosition.y}px`
-      )
-
-      return newPosition
-    })
-
+    setPosition((prev) => ({ x: prev.x + deltaX, y: prev.y + deltaY }))
     lastClientPosition.current = { x: event.clientX, y: event.clientY }
   }
 
@@ -72,12 +58,6 @@ export const App: React.FC = () => {
       return { x: newX, y: newY }
     })
     setZoom(roundedZoom)
-
-    const backgroundScale = `${roundedZoom * 100}%`
-    document.documentElement.style.setProperty(
-      '--background-scale',
-      backgroundScale
-    )
   }
 
   return (
@@ -90,6 +70,9 @@ export const App: React.FC = () => {
         onWheel={handleWheel}
         style={{
           cursor: dragging ? 'grabbing' : 'grab',
+          backgroundPositionX: position.x,
+          backgroundPositionY: position.y,
+          backgroundSize: `${15 * (1 + zoom)}%`,
         }}
       >
         <div className='actions'>
