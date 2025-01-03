@@ -4,19 +4,28 @@
 
   background: url('./src/assets/grid.svg') repeat;
   background-position: var(--background-x, 0) var(--background-y, 0);
+  background-size: calc(50% * var(--background-scale, 1));
 }
 
-.board-container {
+.board {
+  position: relative;
+
   width: 100%;
   height: 100%;
   overflow: hidden;
-
-  position: relative;
 }
 
-.board-container-window {
-  height: 100%;
+.board-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+
   width: 100%;
+  height: 100%;
+}
+
+.board-wrapper-window {
+  position: absolute;
 }
 
 .board-content {
@@ -27,4 +36,13 @@
   padding: 2px 4px;
   background-color: indianred;
   color: white;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  padding: 15px;
+  background: #eeeeee82;
 }
