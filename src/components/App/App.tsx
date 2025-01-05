@@ -4,8 +4,10 @@ import '@/components/App/App.css'
 import { Card } from '@/components'
 
 type PositionType = { x: number; y: number }
+type CardType = { name: string } & PositionType
 
 export const App: React.FC = () => {
+  const [cards, setCards] = useState<CardType[]>([])
   const [position, setPosition] = useState<PositionType>({ x: 0, y: 0 })
   const [dragging, setDragging] = useState(false)
   const [zoom, setZoom] = useState(1)
@@ -59,6 +61,13 @@ export const App: React.FC = () => {
     setZoom(roundedZoom)
   }
 
+  const handleAddCard = (): void => {
+    setCards((prev) => [
+      ...prev,
+      { name: `Карточка ${prev.length + 1}`, x: 0, y: 0 },
+    ])
+  }
+
   return (
     <div className='board'>
       <div
@@ -78,12 +87,20 @@ export const App: React.FC = () => {
         <div className='actions'>
           <button
             onMouseDown={(e) => {
-              e.preventDefault()
               e.stopPropagation()
             }}
             onClick={handleBackPosition}
           >
             Назад
+          </button>
+
+          <button
+            onMouseDown={(e) => {
+              e.stopPropagation()
+            }}
+            onClick={handleAddCard}
+          >
+            Добавить карточку
           </button>
           <div>Zoom: {zoom}</div>
         </div>
@@ -91,25 +108,15 @@ export const App: React.FC = () => {
           className='board-wrapper-window'
           style={{
             transform: `translate(${position.x}px, ${position.y}px) scale(${zoom})`,
-            transformOrigin: 'center',
           }}
         >
-          <Card
-            name='Карточка 1'
-            scale={zoom}
-          />
-          <Card
-            name='Карточка 2'
-            scale={zoom}
-          />
-          <Card
-            name='Карточка 3'
-            scale={zoom}
-          />
-          <Card
-            name='Карточка 4'
-            scale={zoom}
-          />
+          {cards.map((card, index) => (
+            <Card
+              key={index}
+              name={card.name}
+              scale={zoom}
+            />
+          ))}
         </div>
       </div>
     </div>

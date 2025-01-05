@@ -9,10 +9,11 @@ interface CardProps {
 }
 
 export const Card: React.FC<CardProps> = ({ name, text, scale }) => {
+  const cardRef = useRef<HTMLDivElement>(null)
+
   const [dragging, setDragging] = useState(false)
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const lastPosition = useRef({ x: 0, y: 0 })
-  const cardRef = useRef<HTMLDivElement>(null)
 
   const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>): void => {
     event.stopPropagation()
@@ -50,6 +51,7 @@ export const Card: React.FC<CardProps> = ({ name, text, scale }) => {
       style={{
         transform: `translate(${position.x}px, ${position.y}px)`,
         cursor: dragging ? 'grabbing' : 'grab',
+        zIndex: dragging ? 1 : 0,
       }}
     >
       <div>{name}</div>

@@ -9,6 +9,7 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
+  user-select: none;
 }
 
 .board-wrapper {
@@ -34,13 +35,4 @@
   padding: 2px 4px;
   background-color: indianred;
   color: white;
-}
-
-.actions {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  width: fit-content;
-  padding: 15px;
-  background: #eeeeee82;
 }
