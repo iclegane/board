@@ -1,11 +1,12 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import '@/components/App/App.css'
 
 import { Card, Menu } from '@/components'
+import { useLatest } from '@/hooks'
 
 type PositionType = { x: number; y: number }
-type CardType = { id: string; name: string } & PositionType
+type CardType = { id: string; name: string; coordination: PositionType }
 
 const cardWidth = 155
 const cardHeight = 275
@@ -15,6 +16,7 @@ export const App: React.FC = () => {
   const [position, setPosition] = useState<PositionType>({ x: 0, y: 0 })
   const [dragging, setDragging] = useState(false)
   const [zoom, setZoom] = useState(1)
+  const zoomCb = useLatest(zoom)
 
   const CardsRef = useRef<Record<string, HTMLDivElement>>({})
 
@@ -44,37 +46,12 @@ export const App: React.FC = () => {
   }
 
   const handleBackPosition = (): void => {
-    const { x, y } = cards.at(-1) ?? { x: 0, y: 0 }
+    const { x, y } = cards.at(-1)?.coordination ?? { x: 0, y: 0 }
 
     setPosition({
       x: -x * zoom + (window.innerWidth - cardWidth) / 2,
       y: -y * zoom + (window.innerHeight - cardHeight) / 2,
     })
-  }
-
-  const handleWheel = (event: React.WheelEvent<HTMLDivElement>): void => {
-    const cursorX = event.clientX
-    const cursorY = event.clientY
-
-    let newZoom = zoom
-    const zoomChange = event.deltaY < 0 ? 0.1 : -0.1
-    const updatedZoom = newZoom + zoomChange
-    if (updatedZoom > 0 && updatedZoom <= 3) {
-      newZoom = updatedZoom
-    }
-
-    const roundedZoom = Math.round(newZoom * 10) / 10
-
-    setPosition((prevPosition) => {
-      const deltaX = cursorX - prevPosition.x
-      const deltaY = cursorY - prevPosition.y
-
-      const newX = prevPosition.x + deltaX * (1 - roundedZoom / zoom)
-      const newY = prevPosition.y + deltaY * (1 - roundedZoom / zoom)
-
-      return { x: newX, y: newY }
-    })
-    setZoom(roundedZoom)
   }
 
   const handleAddCard = (): void => {
@@ -83,8 +60,10 @@ export const App: React.FC = () => {
       {
         id: uuidv4(),
         name: `Карточка ${prev.length + 1}`,
-        x: (-position.x + (window.innerWidth - cardWidth) / 2) / zoom,
-        y: (-position.y + (window.innerHeight - cardHeight) / 2) / zoom,
+        coordination: {
+          x: (-position.x + (window.innerWidth - cardWidth) / 2) / zoom,
+          y: (-position.y + (window.innerHeight - cardHeight) / 2) / zoom,
+        },
       },
     ])
   }
@@ -95,13 +74,48 @@ export const App: React.FC = () => {
         item.id === id
           ? {
               ...item,
-              x: item.x + deltaX / zoom,
-              y: item.y + deltaY / zoom,
+              coordination: {
+                x: item.coordination.x + deltaX / zoom,
+                y: item.coordination.y + deltaY / zoom,
+              },
             }
           : item
       )
     )
   }
+
+  useEffect(() => {
+    const handle = (event: WheelEvent): void => {
+      const zoom = zoomCb.current
+
+      const cursorX = event.clientX
+      const cursorY = event.clientY
+
+      let newZoom = zoom
+      const zoomChange = event.deltaY < 0 ? 0.1 : -0.1
+      const updatedZoom = newZoom + zoomChange
+      if (updatedZoom > 0 && updatedZoom <= 3) {
+        newZoom = updatedZoom
+      }
+
+      const roundedZoom = Math.round(newZoom * 10) / 10
+
+      setPosition((prevPosition) => {
+        const deltaX = cursorX - prevPosition.x
+        const deltaY = cursorY - prevPosition.y
+
+        const newX = prevPosition.x + deltaX * (1 - roundedZoom / zoom)
+        const newY = prevPosition.y + deltaY * (1 - roundedZoom / zoom)
+
+        return { x: newX, y: newY }
+      })
+      setZoom(roundedZoom)
+    }
+
+    document.addEventListener('wheel', handle)
+
+    return (): void => document.removeEventListener('wheel', handle)
+  }, [zoomCb])
 
   return (
     <div className='board'>
@@ -116,7 +130,6 @@ export const App: React.FC = () => {
         onMouseMove={handleMouseMove}
         onMouseDown={handleMouseDown}
         onMouseLeave={() => setDragging(false)}
-        onWheel={handleWheel}
         style={{
           cursor: dragging ? 'grabbing' : 'grab',
           backgroundPositionX: position.x,
@@ -138,11 +151,9 @@ export const App: React.FC = () => {
                 CardsRef.current[card.id] = node
               }
             }}
-            id={card.id}
             key={card.id}
-            name={card.name}
-            coordination={{ x: card.x, y: card.y }}
             onMove={handleMoveCard}
+            {...card}
           />
         ))}
       </div>
