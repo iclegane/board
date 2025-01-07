@@ -10,6 +10,9 @@
   background-color: #ffffff;
   color: #333333;
   border-radius: 8px;
+
+  border-width: 1px;
+  border-bottom-style: solid;
   border: 1px solid #dcdcdc;
 
   box-shadow:

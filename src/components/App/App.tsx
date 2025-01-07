@@ -7,11 +7,16 @@ import { Card, Menu } from '@/components'
 type PositionType = { x: number; y: number }
 type CardType = { id: string; name: string } & PositionType
 
+const cardWidth = 155
+const cardHeight = 275
+
 export const App: React.FC = () => {
   const [cards, setCards] = useState<CardType[]>([])
   const [position, setPosition] = useState<PositionType>({ x: 0, y: 0 })
   const [dragging, setDragging] = useState(false)
   const [zoom, setZoom] = useState(1)
+
+  const CardsRef = useRef<Record<string, HTMLDivElement>>({})
 
   const lastClientPosition = useRef<PositionType>({ x: 0, y: 0 })
   const lastCoordinatePosition = useRef<PositionType>({ x: 0, y: 0 })
@@ -40,7 +45,11 @@ export const App: React.FC = () => {
 
   const handleBackPosition = (): void => {
     const { x, y } = cards.at(-1) ?? { x: 0, y: 0 }
-    setPosition({ x: -x * zoom, y: -y * zoom })
+
+    setPosition({
+      x: -x * zoom + window.innerWidth / 2 - cardWidth / 2,
+      y: -y * zoom + window.innerHeight / 2 - cardHeight / 2,
+    })
   }
 
   const handleWheel = (event: React.WheelEvent<HTMLDivElement>): void => {
@@ -74,8 +83,8 @@ export const App: React.FC = () => {
       {
         id: uuidv4(),
         name: `Карточка ${prev.length + 1}`,
-        x: -position.x / zoom,
-        y: -position.y / zoom,
+        x: -position.x / zoom + window.innerWidth / 2 - cardWidth / 2,
+        y: -position.y / zoom + window.innerHeight / 2 - cardHeight / 2,
       },
     ])
   }
@@ -116,6 +125,7 @@ export const App: React.FC = () => {
         }}
       />
       <div
+        ref={(d) => d}
         className='board-content'
         style={{
           transform: `translate(${position.x}px, ${position.y}px) scale(${zoom})`,
@@ -123,6 +133,11 @@ export const App: React.FC = () => {
       >
         {cards.map((card) => (
           <Card
+            ref={(node) => {
+              if (node) {
+                CardsRef.current[card.id] = node
+              }
+            }}
             id={card.id}
             key={card.id}
             name={card.name}
