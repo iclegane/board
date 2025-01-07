@@ -12,7 +12,7 @@
   user-select: none;
 }
 
-.board-wrapper {
+.board-background {
   position: absolute;
   top: 0;
   left: 0;
@@ -23,16 +23,7 @@
   background: url('./src/assets/grid.svg') repeat;
 }
 
-.board-wrapper-window {
-  position: absolute;
-}
-
 .board-content {
   position: absolute;
-  top: 0;
-  left: 0;
-
-  padding: 2px 4px;
-  background-color: indianred;
-  color: white;
+  z-index: 1;
 }

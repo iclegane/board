@@ -1,55 +1,79 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 
 import './styles.css'
+import { useLatest } from '@/hooks'
 
 interface CardProps {
+  id: string
   name?: string
   text?: string
-  scale: number
+  coordination: { x: number; y: number }
+  onMove: (id: string, deltaX: number, deltaY: number) => void
 }
 
-export const Card: React.FC<CardProps> = ({ name, text, scale }) => {
+export const Card: React.FC<CardProps> = ({
+  id,
+  name,
+  text,
+  coordination,
+  onMove,
+}) => {
   const cardRef = useRef<HTMLDivElement>(null)
 
   const [dragging, setDragging] = useState(false)
-  const [position, setPosition] = useState({ x: 0, y: 0 })
-  const lastPosition = useRef({ x: 0, y: 0 })
+  const lastPosition = useRef({ ...coordination })
 
   const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>): void => {
-    event.stopPropagation()
     setDragging(true)
     lastPosition.current = { x: event.clientX, y: event.clientY }
   }
 
-  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>): void => {
-    event.stopPropagation()
+  const handleMouseMove = (event: MouseEvent): void => {
     if (!dragging) return
 
-    const deltaX = (event.clientX - lastPosition.current.x) / scale
-    const deltaY = (event.clientY - lastPosition.current.y) / scale
+    const deltaX = event.clientX - lastPosition.current.x
+    const deltaY = event.clientY - lastPosition.current.y
 
-    setPosition((prevPosition) => {
-      return { x: prevPosition.x + deltaX, y: prevPosition.y + deltaY }
-    })
-
+    onMove(id, deltaX, deltaY)
     lastPosition.current = { x: event.clientX, y: event.clientY }
   }
 
-  const handleMouseUp = (event: React.MouseEvent<HTMLDivElement>): void => {
-    event.stopPropagation()
+  const handleMouseUp = (): void => {
     setDragging(false)
   }
+
+  const onMouseMoveCb = useLatest(handleMouseMove)
+  const onMouseUpCb = useLatest(handleMouseUp)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent): void => {
+      onMouseMoveCb.current(e)
+    }
+    document.addEventListener('mousemove', handler)
+
+    return (): void => {
+      document.removeEventListener('mousemove', handler)
+    }
+  }, [onMouseMoveCb])
+
+  useEffect(() => {
+    const handler = (): void => {
+      onMouseUpCb.current()
+    }
+    document.addEventListener('mouseup', handler)
+
+    return (): void => {
+      document.removeEventListener('mouseup', handler)
+    }
+  }, [onMouseUpCb])
 
   return (
     <div
       className='card'
       ref={cardRef}
       onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={() => setDragging(false)}
       style={{
-        transform: `translate(${position.x}px, ${position.y}px)`,
+        transform: `translate(${coordination.x}px, ${coordination.y}px)`,
         cursor: dragging ? 'grabbing' : 'grab',
         zIndex: dragging ? 1 : 0,
       }}

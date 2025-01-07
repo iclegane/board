@@ -1,10 +1,11 @@
 import React, { useState, useRef } from 'react'
-
+import { v4 as uuidv4 } from 'uuid'
 import '@/components/App/App.css'
-import { Card } from '@/components'
+
+import { Card, Menu } from '@/components'
 
 type PositionType = { x: number; y: number }
-type CardType = { name: string } & PositionType
+type CardType = { id: string; name: string } & PositionType
 
 export const App: React.FC = () => {
   const [cards, setCards] = useState<CardType[]>([])
@@ -38,16 +39,22 @@ export const App: React.FC = () => {
   }
 
   const handleBackPosition = (): void => {
-    const { x, y } = lastCoordinatePosition.current
-    setPosition({ x, y })
+    const { x, y } = cards.at(-1) ?? { x: 0, y: 0 }
+    setPosition({ x: -x * zoom, y: -y * zoom })
   }
 
   const handleWheel = (event: React.WheelEvent<HTMLDivElement>): void => {
     const cursorX = event.clientX
     const cursorY = event.clientY
 
-    const newZoom = event.deltaY < 0 ? zoom + 0.1 : zoom - 0.1
-    const roundedZoom = Math.round(newZoom * 10) / 10 || 1
+    let newZoom = zoom
+    const zoomChange = event.deltaY < 0 ? 0.1 : -0.1
+    const updatedZoom = newZoom + zoomChange
+    if (updatedZoom > 0 && updatedZoom <= 3) {
+      newZoom = updatedZoom
+    }
+
+    const roundedZoom = Math.round(newZoom * 10) / 10
 
     setPosition((prevPosition) => {
       const deltaX = cursorX - prevPosition.x
@@ -64,14 +71,38 @@ export const App: React.FC = () => {
   const handleAddCard = (): void => {
     setCards((prev) => [
       ...prev,
-      { name: `Карточка ${prev.length + 1}`, x: 0, y: 0 },
+      {
+        id: uuidv4(),
+        name: `Карточка ${prev.length + 1}`,
+        x: -position.x / zoom,
+        y: -position.y / zoom,
+      },
     ])
+  }
+
+  const handleMoveCard = (id: string, deltaX: number, deltaY: number): void => {
+    setCards((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              x: item.x + deltaX / zoom,
+              y: item.y + deltaY / zoom,
+            }
+          : item
+      )
+    )
   }
 
   return (
     <div className='board'>
+      <Menu
+        zoom={zoom}
+        onBack={handleBackPosition}
+        onAddCard={handleAddCard}
+      />
       <div
-        className='board-wrapper'
+        className='board-background'
         onMouseUp={handleMouseUp}
         onMouseMove={handleMouseMove}
         onMouseDown={handleMouseDown}
@@ -81,43 +112,24 @@ export const App: React.FC = () => {
           cursor: dragging ? 'grabbing' : 'grab',
           backgroundPositionX: position.x,
           backgroundPositionY: position.y,
-          backgroundSize: `${15 * (1 + zoom)}%`,
+          backgroundSize: `${500 * zoom}px`,
+        }}
+      />
+      <div
+        className='board-content'
+        style={{
+          transform: `translate(${position.x}px, ${position.y}px) scale(${zoom})`,
         }}
       >
-        <div className='actions'>
-          <button
-            onMouseDown={(e) => {
-              e.stopPropagation()
-            }}
-            onClick={handleBackPosition}
-          >
-            Назад
-          </button>
-
-          <button
-            onMouseDown={(e) => {
-              e.stopPropagation()
-            }}
-            onClick={handleAddCard}
-          >
-            Добавить карточку
-          </button>
-          <div>Zoom: {zoom}</div>
-        </div>
-        <div
-          className='board-wrapper-window'
-          style={{
-            transform: `translate(${position.x}px, ${position.y}px) scale(${zoom})`,
-          }}
-        >
-          {cards.map((card, index) => (
-            <Card
-              key={index}
-              name={card.name}
-              scale={zoom}
-            />
-          ))}
-        </div>
+        {cards.map((card) => (
+          <Card
+            id={card.id}
+            key={card.id}
+            name={card.name}
+            coordination={{ x: card.x, y: card.y }}
+            onMove={handleMoveCard}
+          />
+        ))}
       </div>
     </div>
   )
