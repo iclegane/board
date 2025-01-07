@@ -1,0 +1,8 @@
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  padding: 15px;
+  background: #eeeeee82;
+}
