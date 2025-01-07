@@ -47,8 +47,8 @@ export const App: React.FC = () => {
     const { x, y } = cards.at(-1) ?? { x: 0, y: 0 }
 
     setPosition({
-      x: -x * zoom + window.innerWidth / 2 - cardWidth / 2,
-      y: -y * zoom + window.innerHeight / 2 - cardHeight / 2,
+      x: -x * zoom + (window.innerWidth - cardWidth) / 2,
+      y: -y * zoom + (window.innerHeight - cardHeight) / 2,
     })
   }
 
@@ -83,8 +83,8 @@ export const App: React.FC = () => {
       {
         id: uuidv4(),
         name: `Карточка ${prev.length + 1}`,
-        x: -position.x / zoom + window.innerWidth / 2 - cardWidth / 2,
-        y: -position.y / zoom + window.innerHeight / 2 - cardHeight / 2,
+        x: (-position.x + (window.innerWidth - cardWidth) / 2) / zoom,
+        y: (-position.y + (window.innerHeight - cardHeight) / 2) / zoom,
       },
     ])
   }
