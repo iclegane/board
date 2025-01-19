@@ -1,27 +1,30 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import '@/components/App/App.css'
 
 import { Card, Menu } from '@/components'
 import { useLatest } from '@/hooks'
+import { Position } from '@/types'
 
-type PositionType = { x: number; y: number }
-type CardType = { id: string; name: string; coordination: PositionType }
+type CardType = {
+  id: string
+  name: string
+  text?: string
+  coordination: Position
+}
 
 const cardWidth = 155
 const cardHeight = 275
 
 export const App: React.FC = () => {
   const [cards, setCards] = useState<CardType[]>([])
-  const [position, setPosition] = useState<PositionType>({ x: 0, y: 0 })
+  const [position, setPosition] = useState<Position>({ x: 0, y: 0 })
   const [dragging, setDragging] = useState(false)
   const [zoom, setZoom] = useState(1)
   const zoomCb = useLatest(zoom)
 
-  const CardsRef = useRef<Record<string, HTMLDivElement>>({})
-
-  const lastClientPosition = useRef<PositionType>({ x: 0, y: 0 })
-  const lastCoordinatePosition = useRef<PositionType>({ x: 0, y: 0 })
+  const lastClientPosition = useRef<Position>({ x: 0, y: 0 })
+  const lastCoordinatePosition = useRef<Position>({ x: 0, y: 0 })
 
   const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>): void => {
     setDragging(true)
@@ -68,21 +71,34 @@ export const App: React.FC = () => {
     ])
   }
 
-  const handleMoveCard = (id: string, deltaX: number, deltaY: number): void => {
+  const handleEditCardText = useCallback((id: string, text?: string) => {
     setCards((prev) =>
       prev.map((item) =>
         item.id === id
           ? {
               ...item,
-              coordination: {
-                x: item.coordination.x + deltaX / zoom,
-                y: item.coordination.y + deltaY / zoom,
-              },
+              text,
             }
           : item
       )
     )
-  }
+  }, [])
+
+  const handleMoveEndCard = useCallback(
+    (id: string, coordination: Position): void => {
+      setCards((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                coordination,
+              }
+            : item
+        )
+      )
+    },
+    []
+  )
 
   useEffect(() => {
     const handle = (event: WheelEvent): void => {
@@ -138,7 +154,6 @@ export const App: React.FC = () => {
         }}
       />
       <div
-        ref={(d) => d}
         className='board-content'
         style={{
           transform: `translate(${position.x}px, ${position.y}px) scale(${zoom})`,
@@ -146,13 +161,10 @@ export const App: React.FC = () => {
       >
         {cards.map((card) => (
           <Card
-            ref={(node) => {
-              if (node) {
-                CardsRef.current[card.id] = node
-              }
-            }}
             key={card.id}
-            onMove={handleMoveCard}
+            zoom={zoom}
+            onEndEdit={handleEditCardText}
+            onMoveEnd={handleMoveEndCard}
             {...card}
           />
         ))}
