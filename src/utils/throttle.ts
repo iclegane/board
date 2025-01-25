@@ -1,22 +1,29 @@
 type Callback = (...args: any[]) => void
 
-export function throttle<T extends Callback>(func: T, limit: number): T {
-  let lastCall = 0
-  let timeoutId: ReturnType<typeof setTimeout> | null = null
+export function rafThrottle<T extends Callback>(func: T): T {
+  let isThrottled = false
+  let savedArgs: Parameters<T> | null = null
+  let savedThis: any = null
 
-  return function (this: any, ...args: Parameters<T>) {
-    const now = Date.now()
-
-    if (lastCall + limit <= now) {
-      lastCall = now
-      func.apply(this, args)
-    } else if (!timeoutId) {
-      const remainingTime = lastCall + limit - now
-      timeoutId = setTimeout(() => {
-        lastCall = Date.now()
-        timeoutId = null
-        func.apply(this, args)
-      }, remainingTime)
+  function wrapper(this: any, ...args: Parameters<T>) {
+    if (isThrottled) {
+      savedArgs = args
+      savedThis = this
+      return
     }
-  } as T
+
+    func.apply(this, args)
+    isThrottled = true
+
+    requestAnimationFrame(() => {
+      isThrottled = false
+      if (savedArgs) {
+        wrapper.apply(savedThis, savedArgs)
+        savedArgs = null
+        savedThis = null
+      }
+    })
+  }
+
+  return wrapper as T
 }

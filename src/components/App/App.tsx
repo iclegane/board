@@ -5,18 +5,20 @@ import '@/components/App/App.css'
 import { Card, Menu } from '@/components'
 import { useLatest } from '@/hooks'
 import { Position } from '@/types'
+import { rafThrottle } from '@/utils'
 
 type CardType = {
   id: string
   name: string
   text?: string
-  coordination: Position
+  coordinates: Position
 }
 
 const cardWidth = 155
 const cardHeight = 275
 
 export const App: React.FC = () => {
+  const backgroundRef = useRef<HTMLDivElement>(null)
   const [cards, setCards] = useState<CardType[]>([])
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 })
   const [dragging, setDragging] = useState(false)
@@ -49,7 +51,7 @@ export const App: React.FC = () => {
   }
 
   const handleBackPosition = (): void => {
-    const { x, y } = cards.at(-1)?.coordination ?? { x: 0, y: 0 }
+    const { x, y } = cards.at(-1)?.coordinates ?? { x: 0, y: 0 }
 
     setPosition({
       x: -x * zoom + (window.innerWidth - cardWidth) / 2,
@@ -63,7 +65,7 @@ export const App: React.FC = () => {
       {
         id: uuidv4(),
         name: `Карточка ${prev.length + 1}`,
-        coordination: {
+        coordinates: {
           x: (-position.x + (window.innerWidth - cardWidth) / 2) / zoom,
           y: (-position.y + (window.innerHeight - cardHeight) / 2) / zoom,
         },
@@ -85,13 +87,13 @@ export const App: React.FC = () => {
   }, [])
 
   const handleMoveEndCard = useCallback(
-    (id: string, coordination: Position): void => {
+    (id: string, coordinates: Position): void => {
       setCards((prev) =>
         prev.map((item) =>
           item.id === id
             ? {
                 ...item,
-                coordination,
+                coordinates,
               }
             : item
         )
@@ -101,7 +103,12 @@ export const App: React.FC = () => {
   )
 
   useEffect(() => {
-    const handle = (event: WheelEvent): void => {
+    const backgroundContainer = backgroundRef.current
+    if (!backgroundContainer) {
+      return
+    }
+
+    const handleWheel = (event: WheelEvent): void => {
       const zoom = zoomCb.current
 
       const cursorX = event.clientX
@@ -128,9 +135,11 @@ export const App: React.FC = () => {
       setZoom(roundedZoom)
     }
 
-    document.addEventListener('wheel', handle)
+    backgroundContainer.addEventListener('wheel', handleWheel)
 
-    return (): void => document.removeEventListener('wheel', handle)
+    return (): void => {
+      backgroundContainer.removeEventListener('wheel', handleWheel)
+    }
   }, [zoomCb])
 
   return (
@@ -141,9 +150,10 @@ export const App: React.FC = () => {
         onAddCard={handleAddCard}
       />
       <div
+        ref={backgroundRef}
         className='board-background'
         onMouseUp={handleMouseUp}
-        onMouseMove={handleMouseMove}
+        onMouseMove={rafThrottle(handleMouseMove)}
         onMouseDown={handleMouseDown}
         onMouseLeave={() => setDragging(false)}
         style={{

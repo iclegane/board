@@ -1,4 +1,4 @@
-import React, { useState, memo, useRef, useEffect } from 'react'
+import React, { useState, memo, useRef, useEffect, forwardRef } from 'react'
 
 import './styles.css'
 
@@ -9,45 +9,83 @@ type Props = {
 }
 
 export const EditArea: React.FC<Props> = memo(({ text, isEdit, onBlur }) => {
-  const [value, setValue] = useState(text)
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const textElementRef = useRef<HTMLDivElement | null>(null)
+  const areaElementRef = useRef<HTMLTextAreaElement | null>(null)
+
+  const [tempValue, setTempValue] = useState<string | null>(null)
+  const [fontSize, setFontSize] = useState(16) // Начальный размер шрифта
+
+  const value = tempValue ?? text
+
+  useEffect(() => {
+    const adjustFontSize = () => {
+      const container = containerRef.current
+
+      const element = areaElementRef.current ?? textElementRef.current
+
+      if (!container || !element) return
+
+      let currentFontSize = fontSize
+      container.style.fontSize = `${currentFontSize}px`
+
+      if (element) {
+        while (
+          (element.scrollWidth > container.offsetWidth ||
+            element.scrollHeight > container.offsetHeight) &&
+          currentFontSize > 1
+        ) {
+          currentFontSize -= 1
+          container.style.fontSize = `${currentFontSize}px`
+        }
+      }
+
+      setFontSize(currentFontSize)
+    }
+
+    adjustFontSize()
+  }, [value, fontSize, isEdit])
 
   return (
-    <div className='editArea-container'>
+    <div
+      ref={containerRef}
+      className='editArea-container'
+      style={{ fontSize: `${fontSize}px` }}
+    >
       {isEdit ? (
-        <div>{text}</div>
+        <div ref={textElementRef}>{text}</div>
       ) : (
         <TextArea
-          autoFocus
+          ref={areaElementRef}
           value={value}
-          onInput={(e) => setValue((e.target as HTMLTextAreaElement).value)}
-          onBlur={(e) => onBlur(e.target.value)}
+          onInput={(e) => setTempValue((e.target as HTMLTextAreaElement).value)}
+          onBlur={(e) => {
+            setTempValue(null)
+            onBlur(e.target.value)
+          }}
+          autoFocus
         />
       )}
     </div>
   )
 })
 
-const TextArea: React.FC<React.HTMLProps<HTMLTextAreaElement>> = (props) => {
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-
+const TextArea = forwardRef<
+  HTMLTextAreaElement,
+  React.HTMLProps<HTMLTextAreaElement>
+>((props, ref) => {
   useEffect(() => {
-    if (textareaRef.current) {
+    const textareaRef = ref as React.RefObject<HTMLTextAreaElement>
+    if (textareaRef?.current) {
       const length = textareaRef.current.value.length
-
       textareaRef.current.setSelectionRange(length, length)
     }
-  }, [])
+  }, [ref])
 
   return (
     <textarea
-      onScroll={(e) => e.stopPropagation()}
-      onWheel={(e) => e.stopPropagation()}
-      onMouseDown={(e) => e.stopPropagation()}
-      onDoubleClick={(e) => e.stopPropagation()}
-      onClick={(e) => e.stopPropagation()}
-      onMouseMove={(e) => e.stopPropagation()}
-      ref={textareaRef}
+      ref={ref}
       {...props}
     />
   )
-}
+})
