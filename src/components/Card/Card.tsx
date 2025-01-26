@@ -5,7 +5,6 @@ import './styles.css'
 import { EditArea } from './components'
 
 import { useLatest } from '@/hooks'
-import { resetManager } from '@/modules'
 import { Position } from '@/types'
 import { rafThrottle } from '@/utils'
 
@@ -38,11 +37,6 @@ export const Card = memo(
       setDragging(true)
       setTempPosition({ ...coordinates })
       lastPosition.current = { x: event.clientX, y: event.clientY }
-
-      resetManager.onReset(() => {
-        setDragging(false)
-        setTempPosition(null)
-      })
     }
 
     const handleMouseMove = (event: MouseEvent): void => {
@@ -76,6 +70,7 @@ export const Card = memo(
     const onMouseMoveCb = useLatest(handleMouseMove)
     const onMouseUpCb = useLatest(handleMouseUp)
 
+    // Перемещение карточки
     useEffect(() => {
       if (!dragging) {
         return
@@ -99,6 +94,7 @@ export const Card = memo(
       }
     }, [dragging, onMouseMoveCb, onMouseUpCb])
 
+    // Вкл | Выкл режима редактирования
     useEffect(() => {
       const handleDoubleClick = (event: MouseEvent): void => {
         setDragging(false)
@@ -123,6 +119,26 @@ export const Card = memo(
         document.removeEventListener('click', handleClick)
       }
     }, [cardRef])
+
+    // Возврат к прошлой позиции по ESC при перемещении
+    useEffect(() => {
+      if (!dragging) {
+        return
+      }
+
+      const handleKeyPress = (event: KeyboardEvent): void => {
+        if (event.key === 'Escape') {
+          setDragging(false)
+          setTempPosition(null)
+        }
+      }
+
+      document.addEventListener('keydown', handleKeyPress)
+
+      return (): void => {
+        document.removeEventListener('keydown', handleKeyPress)
+      }
+    }, [dragging])
 
     return (
       <div

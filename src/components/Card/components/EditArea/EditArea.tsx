@@ -18,6 +18,7 @@ export const EditArea: React.FC<Props> = memo(({ text, isEdit, onBlur }) => {
 
   const value = tempValue ?? text
 
+  // Изменение размера текста
   useEffect(() => {
     const adjustFontSize = () => {
       const container = containerRef.current
@@ -74,6 +75,7 @@ const TextArea = forwardRef<
   HTMLTextAreaElement,
   React.HTMLProps<HTMLTextAreaElement>
 >((props, ref) => {
+  // Позиция каретки в тексте
   useEffect(() => {
     const textareaRef = ref as React.RefObject<HTMLTextAreaElement>
     if (textareaRef?.current) {

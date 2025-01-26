@@ -132,6 +132,7 @@ export const App: React.FC = () => {
   const handleMouseMoveCb = useLatest(handleMouseMove)
   const handleWheelCb = useLatest(handleWheel)
 
+  // Перемещение и сайзинг доски
   useEffect(() => {
     const backgroundContainer = backgroundRef.current
     if (!backgroundContainer) {
