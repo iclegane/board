@@ -38,7 +38,7 @@ export const App: React.FC = () => {
     setDragging(false)
   }
 
-  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>): void => {
+  const handleMouseMove = (event: MouseEvent): void => {
     if (!dragging) {
       return
     }
@@ -48,6 +48,33 @@ export const App: React.FC = () => {
 
     setPosition((prev) => ({ x: prev.x + deltaX, y: prev.y + deltaY }))
     lastClientPosition.current = { x: event.clientX, y: event.clientY }
+  }
+
+  const handleWheel = (event: WheelEvent): void => {
+    const zoom = zoomCb.current
+
+    const cursorX = event.clientX
+    const cursorY = event.clientY
+
+    let newZoom = zoom
+    const zoomChange = event.deltaY < 0 ? 0.1 : -0.1
+    const updatedZoom = newZoom + zoomChange
+    if (updatedZoom > 0 && updatedZoom <= 3) {
+      newZoom = updatedZoom
+    }
+
+    const roundedZoom = Math.round(newZoom * 10) / 10
+
+    setPosition((prevPosition) => {
+      const deltaX = cursorX - prevPosition.x
+      const deltaY = cursorY - prevPosition.y
+
+      const newX = prevPosition.x + deltaX * (1 - roundedZoom / zoom)
+      const newY = prevPosition.y + deltaY * (1 - roundedZoom / zoom)
+
+      return { x: newX, y: newY }
+    })
+    setZoom(roundedZoom)
   }
 
   const handleBackPosition = (): void => {
@@ -102,45 +129,31 @@ export const App: React.FC = () => {
     []
   )
 
+  const handleMouseMoveCb = useLatest(handleMouseMove)
+  const handleWheelCb = useLatest(handleWheel)
+
   useEffect(() => {
     const backgroundContainer = backgroundRef.current
     if (!backgroundContainer) {
       return
     }
 
-    const handleWheel = (event: WheelEvent): void => {
-      const zoom = zoomCb.current
-
-      const cursorX = event.clientX
-      const cursorY = event.clientY
-
-      let newZoom = zoom
-      const zoomChange = event.deltaY < 0 ? 0.1 : -0.1
-      const updatedZoom = newZoom + zoomChange
-      if (updatedZoom > 0 && updatedZoom <= 3) {
-        newZoom = updatedZoom
-      }
-
-      const roundedZoom = Math.round(newZoom * 10) / 10
-
-      setPosition((prevPosition) => {
-        const deltaX = cursorX - prevPosition.x
-        const deltaY = cursorY - prevPosition.y
-
-        const newX = prevPosition.x + deltaX * (1 - roundedZoom / zoom)
-        const newY = prevPosition.y + deltaY * (1 - roundedZoom / zoom)
-
-        return { x: newX, y: newY }
-      })
-      setZoom(roundedZoom)
+    const wheel = (event: WheelEvent): void => {
+      handleWheelCb.current(event)
     }
 
-    backgroundContainer.addEventListener('wheel', handleWheel)
+    const mouseMove = rafThrottle((event: MouseEvent) => {
+      handleMouseMoveCb.current(event)
+    })
+
+    backgroundContainer.addEventListener('wheel', wheel)
+    backgroundContainer.addEventListener('mousemove', mouseMove)
 
     return (): void => {
-      backgroundContainer.removeEventListener('wheel', handleWheel)
+      backgroundContainer.removeEventListener('wheel', wheel)
+      backgroundContainer.removeEventListener('mousemove', mouseMove)
     }
-  }, [zoomCb])
+  }, [zoomCb, handleMouseMoveCb, handleWheelCb])
 
   return (
     <div className='board'>
@@ -153,7 +166,6 @@ export const App: React.FC = () => {
         ref={backgroundRef}
         className='board-background'
         onMouseUp={handleMouseUp}
-        onMouseMove={rafThrottle(handleMouseMove)}
         onMouseDown={handleMouseDown}
         onMouseLeave={() => setDragging(false)}
         style={{
