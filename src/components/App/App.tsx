@@ -138,20 +138,20 @@ export const App: React.FC = () => {
       return
     }
 
-    const wheel = (event: WheelEvent): void => {
+    const onWheel = (event: WheelEvent): void => {
       handleWheelCb.current(event)
     }
 
-    const mouseMove = rafThrottle((event: MouseEvent) => {
+    const onMouseMove = rafThrottle((event: MouseEvent) => {
       handleMouseMoveCb.current(event)
     })
 
-    backgroundContainer.addEventListener('wheel', wheel)
-    backgroundContainer.addEventListener('mousemove', mouseMove)
+    backgroundContainer.addEventListener('wheel', onWheel)
+    backgroundContainer.addEventListener('mousemove', onMouseMove)
 
     return (): void => {
-      backgroundContainer.removeEventListener('wheel', wheel)
-      backgroundContainer.removeEventListener('mousemove', mouseMove)
+      backgroundContainer.removeEventListener('wheel', onWheel)
+      backgroundContainer.removeEventListener('mousemove', onMouseMove)
     }
   }, [zoomCb, handleMouseMoveCb, handleWheelCb])
 
