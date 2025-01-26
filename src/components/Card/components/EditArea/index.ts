@@ -1,0 +1,1 @@
+export { EditArea } from './EditArea'
