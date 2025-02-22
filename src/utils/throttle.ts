@@ -1,28 +1,23 @@
-type Callback = (...args: any[]) => void
-
-export function rafThrottle<T extends Callback>(func: T): T {
+export function rafThrottle<T extends (...args: any[]) => void>(func: T): T {
   let isThrottled = false
   let savedArgs: Parameters<T> | null = null
   let savedThis: any = null
 
-  function wrapper(this: any, ...args: Parameters<T>) {
-    if (isThrottled) {
-      savedArgs = args
-      savedThis = this
-      return
+  function wrapper(this: any, ...args: Parameters<T>): void {
+    savedArgs = args
+    savedThis = this
+
+    if (!isThrottled) {
+      isThrottled = true
+      requestAnimationFrame(() => {
+        if (savedArgs) {
+          func.apply(savedThis, savedArgs)
+          savedArgs = null
+          savedThis = null
+        }
+        isThrottled = false
+      })
     }
-
-    func.apply(this, args)
-    isThrottled = true
-
-    requestAnimationFrame(() => {
-      isThrottled = false
-      if (savedArgs) {
-        wrapper.apply(savedThis, savedArgs)
-        savedArgs = null
-        savedThis = null
-      }
-    })
   }
 
   return wrapper as T

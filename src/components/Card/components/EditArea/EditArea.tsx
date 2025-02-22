@@ -1,6 +1,7 @@
 import React, { useState, memo, useRef, useEffect, forwardRef } from 'react'
 
 import './styles.css'
+import { useAutoFontSize } from '@/hooks'
 
 type Props = {
   isEdit: boolean
@@ -8,44 +9,15 @@ type Props = {
   onBlur: (txt?: string) => void
 }
 
-export const EditArea: React.FC<Props> = memo(({ text, isEdit, onBlur }) => {
+export const EditArea: React.FC<Props> = memo(({ text, onBlur, isEdit }) => {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const textElementRef = useRef<HTMLDivElement | null>(null)
   const areaElementRef = useRef<HTMLTextAreaElement | null>(null)
 
   const [tempValue, setTempValue] = useState<string | null>(null)
-  const [fontSize, setFontSize] = useState(16) // Начальный размер шрифта
 
   const value = tempValue ?? text
-
-  // Изменение размера текста
-  useEffect(() => {
-    const adjustFontSize = () => {
-      const container = containerRef.current
-
-      const element = areaElementRef.current ?? textElementRef.current
-
-      if (!container || !element) return
-
-      let currentFontSize = fontSize
-      container.style.fontSize = `${currentFontSize}px`
-
-      if (element) {
-        while (
-          (element.scrollWidth > container.offsetWidth ||
-            element.scrollHeight > container.offsetHeight) &&
-          currentFontSize > 1
-        ) {
-          currentFontSize -= 1
-          container.style.fontSize = `${currentFontSize}px`
-        }
-      }
-
-      setFontSize(currentFontSize)
-    }
-
-    adjustFontSize()
-  }, [value, fontSize, isEdit])
+  const fontSize = useAutoFontSize(value ?? '', containerRef)
 
   return (
     <div

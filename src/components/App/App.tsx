@@ -34,10 +34,6 @@ export const App: React.FC = () => {
     lastCoordinatePosition.current = { ...position }
   }
 
-  const handleMouseUp = (): void => {
-    setDragging(false)
-  }
-
   const handleMouseMove = (event: MouseEvent): void => {
     if (!dragging) {
       return
@@ -147,12 +143,26 @@ export const App: React.FC = () => {
       handleMouseMoveCb.current(event)
     })
 
-    backgroundContainer.addEventListener('wheel', onWheel)
-    backgroundContainer.addEventListener('mousemove', onMouseMove)
+    const onMouseLeave = () => {
+      setDragging(false)
+    }
+
+    const onMouseUp = () => {
+      setDragging(false)
+    }
+
+    document.addEventListener('wheel', onWheel)
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseleave', onMouseLeave)
+
+    document.addEventListener('mouseup', onMouseUp)
 
     return (): void => {
-      backgroundContainer.removeEventListener('wheel', onWheel)
-      backgroundContainer.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('wheel', onWheel)
+      document.removeEventListener('mouseleave', onMouseMove)
+      document.addEventListener('mouseleave', onMouseLeave)
+
+      document.addEventListener('mouseup', onMouseUp)
     }
   }, [zoomCb, handleMouseMoveCb, handleWheelCb])
 
@@ -166,9 +176,7 @@ export const App: React.FC = () => {
       <div
         ref={backgroundRef}
         className='board-background'
-        onMouseUp={handleMouseUp}
         onMouseDown={handleMouseDown}
-        onMouseLeave={() => setDragging(false)}
         style={{
           cursor: dragging ? 'grabbing' : 'grab',
           backgroundPositionX: position.x,

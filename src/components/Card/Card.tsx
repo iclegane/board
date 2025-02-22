@@ -21,7 +21,7 @@ interface CardProps {
 export const Card = memo(
   ({ id, name, text, coordinates, onMoveEnd, onEndEdit, zoom }: CardProps) => {
     const cardRef = useRef<HTMLDivElement | null>(null)
-    const lastPosition = useRef({ ...coordinates })
+    const lastPosition = useRef(coordinates)
 
     const [isEditMode, setIsEditMode] = useState<boolean>(false)
     const [tempPosition, setTempPosition] = useState<Position | null>(null)
@@ -35,7 +35,7 @@ export const Card = memo(
       }
 
       setDragging(true)
-      setTempPosition({ ...coordinates })
+      setTempPosition(coordinates)
       lastPosition.current = { x: event.clientX, y: event.clientY }
     }
 
