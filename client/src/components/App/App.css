@@ -1,0 +1,29 @@
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+.board {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  user-select: none;
+}
+
+.board-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 100%;
+
+  background: url('./src/assets/grid.svg') repeat;
+}
+
+.board-content {
+  position: absolute;
+  z-index: 1;
+}
