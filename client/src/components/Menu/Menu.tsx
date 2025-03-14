@@ -1,4 +1,7 @@
 import React from 'react'
+
+import { Button } from '@/components'
+
 import './styles.css'
 
 type MenuType = {
@@ -10,8 +13,8 @@ type MenuType = {
 export const Menu: React.FC<MenuType> = ({ zoom, onAddCard, onBack }) => {
   return (
     <div className='actions'>
-      <button onClick={onBack}>Назад</button>
-      <button onClick={onAddCard}>Добавить карточку</button>
+      <Button onClick={onBack}>Назад</Button>
+      <Button onClick={onAddCard}>Добавить карточку</Button>
       <div>Zoom: {zoom}</div>
     </div>
   )

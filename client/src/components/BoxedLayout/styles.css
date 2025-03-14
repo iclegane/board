@@ -1,0 +1,24 @@
+.centered-container {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.centered-box {
+    width: 450px;
+    height: 500px;
+    display: flex
+;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgb(193 193 193 / 10%);
+    padding: 20px;
+}
+
+.centered-box-content {
+    width: 100%;
+}
