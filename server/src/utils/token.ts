@@ -1,0 +1,63 @@
+import process from "process";
+import dayjs from "dayjs";
+import crypto from 'crypto';
+
+type Payload = {
+    id: string;
+    expiresIn: number;
+}
+
+const encrypt = (data: Payload, secretKey: string): string => {
+    const IV = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(secretKey, 'hex'), IV);
+    let encrypted = cipher.update(JSON.stringify(data), 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return Buffer.from(`${IV.toString('hex')}:${encrypted}`).toString('base64');
+};
+
+const decrypt = (token: string, secretKey: string): Payload | null => {
+    try {
+        const raw = Buffer.from(token, 'base64').toString('utf8');
+        const [ivHex, encryptedData] = raw.split(':');
+        const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(secretKey, 'hex'), Buffer.from(ivHex, 'hex'));
+        let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        return JSON.parse(decrypted);
+    } catch {
+        return null;
+    }
+};
+
+export const generateAccessToken = (userId: string): string => {
+    return encrypt(
+        { id: userId, expiresIn: Date.now() + 60 * 60 * 1000 },
+        process.env.JWT_ACCESS_SECRET_KEY!
+    );
+};
+
+export const generateRefreshToken = (userId: string): string => {
+    return encrypt(
+        { id: userId, expiresIn: Date.now() + 2 * 60 * 60 * 1000 },
+        process.env.JWT_REFRESH_SECRET_KEY!
+    );
+};
+
+export const verifyAccessToken = (token: string): Payload | null => {
+    const data = decrypt(token, process.env.JWT_ACCESS_SECRET_KEY!);
+
+    if (data !== null && Date.now() < data.expiresIn) {
+        return data;
+    }
+
+    return null
+};
+
+export const verifyRefreshToken = (token: string): Payload | null => {
+    const data = decrypt(token, process.env.JWT_REFRESH_SECRET_KEY!);
+
+    if (data !== null && Date.now() < data.expiresIn) {
+        return data;
+    }
+
+    return null
+};
