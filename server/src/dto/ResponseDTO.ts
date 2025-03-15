@@ -10,11 +10,13 @@ export class SuccessResponse<T = unknown> {
     }
 }
 
-export class ErrorResponse {
+export class ErrorResponse<T = null> {
     readonly status = 'error';
     readonly message: string;
+    readonly payload?: T;
 
-    constructor(message: string) {
+    constructor(message: string, payload?: T) {
         this.message = message;
+        this.payload = payload;
     }
 }
