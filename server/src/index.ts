@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import process from "process";
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
 
 import Auth from './routes/Auth.js';
 import Board from './routes/Board.js';
@@ -23,6 +24,10 @@ mongoose.connect(MONGO_URI)
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(cors({
+    origin: "http://localhost:5176",
+    credentials: true
+}));
 // Todo: Winston/Morgan
 app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);

@@ -1,51 +1,91 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { useForm, type SubmitHandler, Controller } from 'react-hook-form'
+import { useNavigate } from 'react-router'
 
 import { Button, Input, Password } from '@/components'
-import { useField } from '@/hooks'
+import { Plate } from '@/components/ui/Plate'
 
 import './styles.css'
+import { useAuth } from '@/context/AuthContext.tsx'
 
-export const LoginForm: React.FC<{}> = () => {
-  const login = useField<string | undefined>({
-    validator: (value) => !!value && value.length > 0,
-  })
-  const password = useField<string | undefined>({
-    validator: (value) => !!value && value.length > 0,
-  })
+type FormValues = {
+  login: string
+  password: string
+}
 
-  const isSubmitDisabled = login.isError || password.isError
+export const LoginForm: React.FC = () => {
+  const { login: loginF } = useAuth()
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>()
 
-  const handleOnFormSubmit = (e: React.FormEvent<HTMLFormElement>) =>
-    e.preventDefault()
+  const navigate = useNavigate()
+
+  const onSubmit: SubmitHandler<FormValues> = async ({ login, password }) => {
+    setIsLoading(true)
+    loginF(login, password).then(() => {
+      navigate('/board')
+    })
+    setIsLoading(false)
+  }
 
   return (
     <form
       name='login-form'
-      onSubmit={handleOnFormSubmit}
-      className={'login-form'}
+      className='login-form'
+      onSubmit={handleSubmit(onSubmit)}
     >
-      <Input
-        value={login.value}
-        status={login.isError ? 'error' : undefined}
-        onChange={login.handleChange}
-        name={'login'}
-        placeholder='Login'
+      <Controller
+        name='login'
+        control={control}
+        rules={{ required: 'Login is required' }}
+        render={({ field }) => (
+          <Input
+            {...field}
+            placeholder='Login'
+            status={errors.login ? 'error' : 'default'}
+          />
+        )}
       />
-      <Password
-        value={password.value}
-        status={password.isError ? 'error' : undefined}
-        onChange={password.handleChange}
-        name={'password'}
-        showPasswordBtn
-        placeholder='Password'
-      />
+      {errors.login && (
+        <Plate
+          status='error'
+          text={errors.login.message}
+        />
+      )}
 
-      <Button
-        type={'submit'}
-        disabled={isSubmitDisabled}
-      >
-        Log in
-      </Button>
+      <Controller
+        name='password'
+        control={control}
+        rules={{
+          required: 'Password is required',
+          minLength: {
+            value: 6,
+            message: 'Password must be at least 6 characters',
+          },
+        }}
+        render={({ field }) => (
+          <Password
+            {...field}
+            placeholder='Password'
+            status={errors.password ? 'error' : 'default'}
+            showPasswordBtn
+          />
+        )}
+      />
+      {errors.password && (
+        <Plate
+          status='error'
+          text={errors.password.message}
+        />
+      )}
+
+      <Button type='submit'>Log in</Button>
+
+      {isLoading && 'loading...'}
     </form>
   )
 }

@@ -68,6 +68,7 @@ export const Password: React.FC<BaseInputProps & PasswordProps> = ({
       />
       {showPasswordBtn && isNotEmptyInput && (
         <Button
+          type='button'
           size={'small'}
           onClick={handleChangeVisible}
         >
