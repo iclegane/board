@@ -30,14 +30,14 @@ const decrypt = (token: string, secretKey: string): Payload | null => {
 
 export const generateAccessToken = (userId: string): string => {
     return encrypt(
-        { id: userId, expiresIn: Date.now() + 60 * 60 * 1000 },
+        { id: userId, expiresIn: dayjs().add(1, 'hour').unix() },
         process.env.JWT_ACCESS_SECRET_KEY!
     );
 };
 
 export const generateRefreshToken = (userId: string): string => {
     return encrypt(
-        { id: userId, expiresIn: Date.now() + 2 * 60 * 60 * 1000 },
+        { id: userId, expiresIn: dayjs().add(3, 'hour').unix() },
         process.env.JWT_REFRESH_SECRET_KEY!
     );
 };
@@ -45,7 +45,7 @@ export const generateRefreshToken = (userId: string): string => {
 export const verifyAccessToken = (token: string): Payload | null => {
     const data = decrypt(token, process.env.JWT_ACCESS_SECRET_KEY!);
 
-    if (data !== null && Date.now() < data.expiresIn) {
+    if (data !== null && dayjs().isBefore(dayjs.unix(data.expiresIn))) {
         return data;
     }
 
@@ -55,7 +55,7 @@ export const verifyAccessToken = (token: string): Payload | null => {
 export const verifyRefreshToken = (token: string): Payload | null => {
     const data = decrypt(token, process.env.JWT_REFRESH_SECRET_KEY!);
 
-    if (data !== null && Date.now() < data.expiresIn) {
+    if (data !== null && dayjs().isBefore(dayjs.unix(data.expiresIn))) {
         return data;
     }
 
