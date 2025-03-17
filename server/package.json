@@ -20,9 +20,11 @@
     "express": "4.21.2",
     "mongoose": "8.12.1",
     "uuid": "11.1.0",
+    "ws": "8.18.1",
     "yup": "1.6.1"
   },
   "devDependencies": {
+    "@types/ws": "8.18.0",
     "@types/bcrypt": "5.0.2",
     "@types/cookie-parser": "1.4.8",
     "@types/cors": "^2.8.17",
