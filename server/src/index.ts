@@ -25,7 +25,7 @@ mongoose.connect(MONGO_URI)
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-    origin: "http://localhost:5176",
+    origin: "http://localhost:3001",
     credentials: true
 }));
 // Todo: Winston/Morgan
