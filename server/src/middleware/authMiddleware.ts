@@ -1,7 +1,7 @@
 import { HTTP_STATUS } from "../constants/HttpStatus.js";
 import { verifyAccessToken } from "../utils/token.js";
 import { Request, Response, NextFunction } from "express";
-import {ErrorResponse} from "../dto/ResponseDTO.js";
+import { ErrorResponse } from "../dto/ResponseDTO.js";
 
 interface AuthRequest extends Request {
     userId?: string;
