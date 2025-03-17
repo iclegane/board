@@ -4,12 +4,17 @@ import mongoose from "mongoose";
 import process from "process";
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
+import { WebSocketServer } from 'ws';
+import  { URL } from 'url'
 
 import Auth from './routes/Auth.js';
 import Board from './routes/Board.js';
+import { ERROR_MESSAGES, HTTP_STATUS } from "./constants/HttpStatus.js";
+import { verifyAccessToken } from "./utils/token.js";
 
 dotenv.config();
 
+// Todo: Вынести порты и адреса в .env
 const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
@@ -50,3 +55,36 @@ process.on("SIGINT", () => {
     console.log("Принудительное завершение...");
     process.exit(0);
 });
+
+// Todo: Вынести
+const wss = new WebSocketServer({ port: 8080 });
+wss.on('connection', (ws, req) => {
+    const url = req.url;
+    if (!url) {
+        return ws.close(1011, ERROR_MESSAGES.SERVER_ERROR);
+    }
+    const parsedUrl = new URL(url, 'http://localhost');
+    const token = parsedUrl.searchParams.get('accessToken');
+
+    if (!token) {
+        return ws.close(1008, ERROR_MESSAGES.UNAUTHORIZED);
+    }
+
+    try {
+        const payload = verifyAccessToken(token);
+        if (!payload) {
+            return ws.close(1008, ERROR_MESSAGES.UNAUTHORIZED);
+        }
+        console.log(`User ${payload.id} is connected`);
+
+        ws.on('message', (message) => {
+            console.log(`Message form: ${payload.id}: ${message}`);
+            ws.send(`Call: ${message}`);
+        });
+
+    } catch (error) {
+        console.log(error);
+        ws.close(1011, ERROR_MESSAGES.SERVER_ERROR);
+    }
+});
+
