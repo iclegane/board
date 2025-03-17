@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid'
 
 import './Board.css'
 
-import { Card, Menu } from '@/components'
+import { Card, Menu, RightMenu } from '@/components'
 import { useLatest } from '@/hooks'
 import { Position } from '@/types'
 import { rafThrottle } from '@/utils'
@@ -174,6 +174,7 @@ export const Board: React.FC = () => {
         onBack={handleBackPosition}
         onAddCard={handleAddCard}
       />
+      <RightMenu />
       <div
         ref={backgroundRef}
         className='board-background'

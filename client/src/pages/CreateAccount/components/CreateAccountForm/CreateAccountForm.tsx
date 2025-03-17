@@ -1,15 +1,13 @@
 import React, { useState } from 'react'
-
-import { Button, Input } from '@/components'
-
-import './styles.css'
 import { Controller, type SubmitHandler, useForm } from 'react-hook-form'
+import { useNavigate } from 'react-router'
 
 import { api } from '@/api/axios.ts'
+import { Button, Input } from '@/components'
 import { Plate } from '@/components/ui/Plate'
 import { API_PATH } from '@/constants'
 
-import { useNavigate } from 'react-router'
+import './styles.css'
 
 type FormValues = {
   login: string
@@ -28,12 +26,9 @@ export const CreateAccountForm: React.FC<{}> = () => {
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     setIsLoading(true)
-    api
-      .post(API_PATH.CREATE, { ...data })
-      .then(() => {
-        navigate('/login')
-      })
-      .catch(() => {})
+    api.post(API_PATH.CREATE, { ...data }).then(() => {
+      navigate('/login')
+    })
     setIsLoading(false)
   }
 

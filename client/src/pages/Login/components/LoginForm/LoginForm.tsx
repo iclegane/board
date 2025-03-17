@@ -4,9 +4,9 @@ import { useNavigate } from 'react-router'
 
 import { Button, Input, Password } from '@/components'
 import { Plate } from '@/components/ui/Plate'
+import { useAuth } from '@/context/AuthContext.tsx'
 
 import './styles.css'
-import { useAuth } from '@/context/AuthContext.tsx'
 
 type FormValues = {
   login: string
