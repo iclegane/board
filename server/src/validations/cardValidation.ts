@@ -6,4 +6,6 @@ export const deleteCardSchema = yup.object({
 
 export const addCardSchema = yup.object({
     name: yup.string().min(3).max(15).required('Name is required'),
+    x: yup.number(),
+    y: yup.number(),
 });

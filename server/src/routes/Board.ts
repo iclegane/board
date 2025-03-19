@@ -16,7 +16,7 @@ const router = Router();
 
 router.post('/card', authMiddleware, validate(addCardSchema), async (req: AuthRequest, res) => {
     try {
-        const cardSchema = new Card({ name: req.body.name, userId: req.userId  });
+        const cardSchema = new Card({ name: req.body.name, userId: req.userId, x: req.body.x ?? 0, y: req.body.y ?? 0  });
         const card = await cardSchema.save();
 
         const response = new SuccessResponse('Card added', { id: card.id })

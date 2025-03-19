@@ -98,8 +98,13 @@ router.post('/refresh', async (req, res) => {
         const payload = verifyRefreshToken(refreshToken);
 
         if (!payload) {
+            res.clearCookie('refreshToken', {
+                httpOnly: true,
+                secure: false,
+                sameSite: 'strict'
+            });
             const response = new ErrorResponse('Unauthorized')
-            res.status(HTTP_STATUS.FORBIDDEN).json(response);
+            res.status(HTTP_STATUS.UNAUTHORIZED).json(response);
             return
         }
 
@@ -107,7 +112,7 @@ router.post('/refresh', async (req, res) => {
 
         res.setHeader('Authorization', `Bearer ${accessToken}`);
 
-        const response = new SuccessResponse('Refresh token success', { accessToken })
+        const response = new SuccessResponse('Refresh token success', accessToken)
         res.status(HTTP_STATUS.OK).json(response);
     } catch (error) {
         const response = new ErrorResponse('Server error')

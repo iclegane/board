@@ -19,7 +19,7 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
     const payload = verifyAccessToken(token);
     if (!payload) {
         const response = new ErrorResponse('Invalid token')
-        res.status(HTTP_STATUS.FORBIDDEN).json(response);
+        res.status(HTTP_STATUS.UNAUTHORIZED).json(response);
         return;
     }
 
