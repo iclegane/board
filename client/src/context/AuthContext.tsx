@@ -2,13 +2,12 @@ import React, {
   createContext,
   useCallback,
   useContext,
-  useLayoutEffect,
+  useEffect,
   useMemo,
   useState,
 } from 'react'
 
-import { api } from '@/api/axios'
-import { ACCESS_TOKEN_KEY, API_PATH } from '@/constants'
+import { AuthService } from '@/service/Auth.ts'
 
 type AuthProvider = {
   children: React.ReactNode
@@ -20,12 +19,6 @@ type AuthContextType = {
   logout: () => Promise<void>
 }
 
-type LoginPayload = {
-  payload: {
-    accessToken: string
-  }
-}
-
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export const AuthProvider: React.FC<AuthProvider> = ({ children }) => {
@@ -33,25 +26,18 @@ export const AuthProvider: React.FC<AuthProvider> = ({ children }) => {
 
   const login = useCallback(async (login: string, password: string) => {
     try {
-      const response = await api.post<LoginPayload>(API_PATH.LOGIN, {
-        login,
-        password,
-      })
-      const token = response.data.payload.accessToken
-      localStorage.setItem(ACCESS_TOKEN_KEY, token)
+      await AuthService.login(login, password)
       setIsLogged(true)
     } catch (error) {
       console.error('Login failed:', error)
-      throw error
     }
   }, [])
 
   const logout = useCallback(async () => {
     try {
-      await api.post(API_PATH.LOGOUT)
+      await AuthService.logout()
     } finally {
       setIsLogged(false)
-      localStorage.removeItem(ACCESS_TOKEN_KEY)
     }
   }, [])
 
@@ -60,20 +46,16 @@ export const AuthProvider: React.FC<AuthProvider> = ({ children }) => {
     [login, logout, isLogged]
   )
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await api.post(
-          API_PATH.REFRESH,
-          {},
-          { withCredentials: true }
-        )
-        setIsLogged(Boolean(response.data.payload))
+        const token = await AuthService.refresh()
+
+        setIsLogged(Boolean(token))
       } catch {
         setIsLogged(false)
       }
     }
-
     checkAuth()
   }, [])
 

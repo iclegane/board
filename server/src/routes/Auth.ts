@@ -38,7 +38,7 @@ router.post('/login', validate(loginSchema), async (req, res) => {
 
         res.setHeader('Authorization', `Bearer ${accessToken}`);
 
-        const response = new SuccessResponse('Login successfully', { accessToken })
+        const response = new SuccessResponse('Login successfully', accessToken)
         res.status(HTTP_STATUS.OK).json(response);
     } catch (error) {
         const response = new ErrorResponse('Server error')

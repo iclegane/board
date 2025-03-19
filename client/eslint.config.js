@@ -37,7 +37,7 @@ const config = [
 
       // TypeScript ESLint plugin rules
       '@typescript-eslint/no-unused-vars': 'warn',
-      '@typescript-eslint/explicit-module-boundary-types': 'warn',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
 
       // React ESLint plugin rules
       'react/prop-types': 'off', // React PropTypes can be disabled if using TypeScript
@@ -80,7 +80,7 @@ const config = [
     rules: {
       // Explicitly enabling TypeScript, React, and Prettier plugin rules
       '@typescript-eslint/no-unused-vars': 'warn',
-      '@typescript-eslint/explicit-module-boundary-types': 'warn',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
       'react/prop-types': 'off',
       'react/react-in-jsx-scope': 'off',
       'prettier/prettier': ['error'],

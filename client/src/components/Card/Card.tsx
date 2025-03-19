@@ -29,7 +29,7 @@ export const Card = memo(
 
     const position = tempPosition ?? coordinates
 
-    const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>): void => {
+    const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
       if (isEditMode) {
         return
       }
@@ -39,7 +39,7 @@ export const Card = memo(
       lastPosition.current = { x: event.clientX, y: event.clientY }
     }
 
-    const handleMouseMove = (event: MouseEvent): void => {
+    const handleMouseMove = (event: MouseEvent) => {
       if (!dragging) return
 
       const deltaX = event.clientX - lastPosition.current.x
@@ -50,15 +50,15 @@ export const Card = memo(
           return prev
         }
 
-        return {
-          x: prev.x + deltaX / zoom,
-          y: prev.y + deltaY / zoom,
-        }
+        const x = prev.x + deltaX / zoom
+        const y = prev.y + deltaY / zoom
+
+        return { x, y }
       })
       lastPosition.current = { x: event.clientX, y: event.clientY }
     }
 
-    const handleMouseUp = (): void => {
+    const handleMouseUp = () => {
       setDragging(false)
 
       if (tempPosition) {
