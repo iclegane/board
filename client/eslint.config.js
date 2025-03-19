@@ -47,7 +47,7 @@ const config = [
       'prettier/prettier': ['error'],
 
       // Other potential plugin rules you want to enable
-      '@typescript-eslint/explicit-function-return-type': 'warn',
+      '@typescript-eslint/explicit-function-return-type': 'off',
     },
     ignores: [
       // System files

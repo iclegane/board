@@ -22,10 +22,15 @@ api.interceptors.request.use((config) => {
 })
 
 let isRetried = false
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401 && !isRetried) {
+    if (
+      error.response?.status === 401 &&
+      error.config.url !== API_PATH.REFRESH &&
+      !isRetried
+    ) {
       try {
         const response = await api.post(
           API_PATH.REFRESH,
@@ -34,12 +39,13 @@ api.interceptors.response.use(
         )
         const newAccessToken = response.data.payload
         localStorage.setItem(ACCESS_TOKEN_KEY, newAccessToken)
-
         error.config.headers.Authorization = `${BEARER_PREFIX} ${newAccessToken}`
         return api.request(error.config)
       } catch {
-        isRetried = true
         localStorage.removeItem(ACCESS_TOKEN_KEY)
+        return Promise.reject(error)
+      } finally {
+        isRetried = true
       }
     }
     return Promise.reject(error)

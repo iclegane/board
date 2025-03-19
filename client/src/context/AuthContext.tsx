@@ -63,7 +63,11 @@ export const AuthProvider: React.FC<AuthProvider> = ({ children }) => {
   useLayoutEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await api.post(API_PATH.REFRESH)
+        const response = await api.post(
+          API_PATH.REFRESH,
+          {},
+          { withCredentials: true }
+        )
         setIsLogged(Boolean(response.data.payload))
       } catch {
         setIsLogged(false)
