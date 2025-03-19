@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router'
 import { api } from '@/api/axios.ts'
 import { Button, Input } from '@/components'
 import { Plate } from '@/components/ui/Plate'
-import { API_PATH } from '@/constants'
+import { API_PATH, PAGES_PATH } from '@/constants'
 
 import './styles.css'
 
@@ -15,7 +15,7 @@ type FormValues = {
   passwordConfirmation: string
 }
 
-export const CreateAccountForm: React.FC<{}> = () => {
+export const CreateAccountForm: React.FC = () => {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const {
@@ -26,9 +26,8 @@ export const CreateAccountForm: React.FC<{}> = () => {
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     setIsLoading(true)
-    api.post(API_PATH.CREATE, { ...data }).then(() => {
-      navigate('/login')
-    })
+    await api.post(API_PATH.CREATE, data)
+    navigate(PAGES_PATH.CREATE)
     setIsLoading(false)
   }
 

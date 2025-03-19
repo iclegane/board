@@ -2,6 +2,7 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useLayoutEffect,
   useMemo,
   useState,
 } from 'react'
@@ -15,12 +16,9 @@ type AuthProvider = {
 
 type AuthContextType = {
   isLogged: boolean
-  accessToken: string | null
   login: (login: string, password: string) => Promise<void>
   logout: () => Promise<void>
 }
-
-const AuthContext = createContext<AuthContextType | null>(null)
 
 type LoginPayload = {
   payload: {
@@ -28,12 +26,10 @@ type LoginPayload = {
   }
 }
 
-export const AuthProvider: React.FC<AuthProvider> = ({ children }) => {
-  const [accessToken, setAccessToken] = useState(
-    localStorage.getItem(ACCESS_TOKEN_KEY)
-  )
+const AuthContext = createContext<AuthContextType | null>(null)
 
-  const isLogged = Boolean(accessToken)
+export const AuthProvider: React.FC<AuthProvider> = ({ children }) => {
+  const [isLogged, setIsLogged] = useState(false)
 
   const login = useCallback(async (login: string, password: string) => {
     try {
@@ -42,8 +38,8 @@ export const AuthProvider: React.FC<AuthProvider> = ({ children }) => {
         password,
       })
       const token = response.data.payload.accessToken
-      setAccessToken(token)
       localStorage.setItem(ACCESS_TOKEN_KEY, token)
+      setIsLogged(true)
     } catch (error) {
       console.error('Login failed:', error)
       throw error
@@ -54,15 +50,28 @@ export const AuthProvider: React.FC<AuthProvider> = ({ children }) => {
     try {
       await api.post(API_PATH.LOGOUT)
     } finally {
-      setAccessToken(null)
+      setIsLogged(false)
       localStorage.removeItem(ACCESS_TOKEN_KEY)
     }
   }, [])
 
   const value = useMemo(
-    () => ({ accessToken, login, logout, isLogged }),
-    [accessToken]
+    () => ({ login, logout, isLogged }),
+    [login, logout, isLogged]
   )
+
+  useLayoutEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await api.post(API_PATH.REFRESH)
+        setIsLogged(Boolean(response.data.payload))
+      } catch {
+        setIsLogged(false)
+      }
+    }
+
+    checkAuth()
+  }, [])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

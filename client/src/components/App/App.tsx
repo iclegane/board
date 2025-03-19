@@ -1,6 +1,7 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router'
 
+import { PAGES_PATH } from '@/constants'
 import { Board, NotFound, Login, CreateAccount, Logout } from '@/pages'
 import { AuthOnly, GuestOnly } from '@/routes'
 
@@ -12,22 +13,22 @@ export const App: React.FC = () => {
       <Routes>
         <Route element={<AuthOnly />}>
           <Route
-            path='/board'
+            path={PAGES_PATH.BOARD}
             element={<Board />}
           />
           <Route
-            path='/logout'
+            path={PAGES_PATH.LOGOUT}
             element={<Logout />}
           />
         </Route>
 
         <Route element={<GuestOnly />}>
           <Route
-            path='/login'
+            path={PAGES_PATH.LOGIN}
             element={<Login />}
           />
           <Route
-            path='/create'
+            path={PAGES_PATH.CREATE}
             element={<CreateAccount />}
           />
         </Route>

@@ -2,6 +2,7 @@ import React from 'react'
 import { useNavigate } from 'react-router'
 
 import { Button } from '@/components'
+import { PAGES_PATH } from '@/constants'
 import { useAuth } from '@/context/AuthContext.tsx'
 
 export const LogoutButton: React.FC = () => {
@@ -10,7 +11,7 @@ export const LogoutButton: React.FC = () => {
 
   const handleLogout = async () => {
     logout().then(() => {
-      navigate('/login')
+      navigate(PAGES_PATH.LOGIN)
     })
   }
 

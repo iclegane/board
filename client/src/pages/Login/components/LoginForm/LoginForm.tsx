@@ -7,6 +7,7 @@ import { Plate } from '@/components/ui/Plate'
 import { useAuth } from '@/context/AuthContext.tsx'
 
 import './styles.css'
+import { PAGES_PATH } from '@/constants'
 
 type FormValues = {
   login: string
@@ -26,9 +27,8 @@ export const LoginForm: React.FC = () => {
 
   const onSubmit: SubmitHandler<FormValues> = async ({ login, password }) => {
     setIsLoading(true)
-    loginF(login, password).then(() => {
-      navigate('/board')
-    })
+    await loginF(login, password)
+    navigate(PAGES_PATH.BOARD)
     setIsLoading(false)
   }
 
