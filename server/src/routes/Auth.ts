@@ -27,8 +27,8 @@ router.post('/login', validate(loginSchema), async (req, res) => {
             return
         }
 
-        const accessToken = generateAccessToken(user.id);
-        const refreshToken = generateRefreshToken(user.id);
+        const accessToken = generateAccessToken(user.id, login);
+        const refreshToken = generateRefreshToken(user.id, login);
 
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
@@ -108,7 +108,7 @@ router.post('/refresh', async (req, res) => {
             return
         }
 
-        const accessToken = generateAccessToken(payload.id);
+        const accessToken = generateAccessToken(payload.id, payload.login);
 
         res.setHeader('Authorization', `Bearer ${accessToken}`);
 

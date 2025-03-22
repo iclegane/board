@@ -1,36 +1,33 @@
 import express from "express";
 import dotenv from "dotenv";
-import mongoose from "mongoose";
 import process from "process";
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-import { WebSocketServer } from 'ws';
-import  { URL } from 'url'
 
 import Auth from './routes/Auth.js';
 import Board from './routes/Board.js';
-import { ERROR_MESSAGES, HTTP_STATUS } from "./constants/HttpStatus.js";
-import { verifyAccessToken } from "./utils/token.js";
+import { WSServer } from "./service/WS.js";
+import { Mongo } from "./service/Mongo.js";
 
 dotenv.config();
 
-// Todo: Вынести порты и адреса в .env
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.APP_PORT;
+const WS_PORT = process.env.WS_PORT;
 const MONGO_URI = process.env.MONGO_URI;
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN;
 
-if (!MONGO_URI) {
-    throw new Error("MongoDB URI is missing");
+if (!PORT || !WS_PORT || !MONGO_URI || !CLIENT_ORIGIN) {
+    throw new Error("process.env vars is missing");
 }
-// Todo: вынести
-mongoose.connect(MONGO_URI)
-    .then(() => console.log('MongoDB connected'))
-    .catch(err => console.log(err));
+
+new Mongo(MONGO_URI);
+new WSServer(Number(WS_PORT));
 
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-    origin: "http://localhost:3001",
+    origin: CLIENT_ORIGIN,
     credentials: true
 }));
 // Todo: Winston/Morgan
@@ -55,36 +52,3 @@ process.on("SIGINT", () => {
     console.log("Принудительное завершение...");
     process.exit(0);
 });
-
-// Todo: Вынести
-const wss = new WebSocketServer({ port: 8080 });
-wss.on('connection', (ws, req) => {
-    const url = req.url;
-    if (!url) {
-        return ws.close(1011, ERROR_MESSAGES.SERVER_ERROR);
-    }
-    const parsedUrl = new URL(url, 'http://localhost');
-    const token = parsedUrl.searchParams.get('accessToken');
-
-    if (!token) {
-        return ws.close(1008, ERROR_MESSAGES.UNAUTHORIZED);
-    }
-
-    try {
-        const payload = verifyAccessToken(token);
-        if (!payload) {
-            return ws.close(1008, ERROR_MESSAGES.UNAUTHORIZED);
-        }
-        console.log(`User ${payload.id} is connected`);
-
-        ws.on('message', (message) => {
-            console.log(`Message form: ${payload.id}: ${message}`);
-            ws.send(`Call: ${message}`);
-        });
-
-    } catch (error) {
-        console.log(error);
-        ws.close(1011, ERROR_MESSAGES.SERVER_ERROR);
-    }
-});
-

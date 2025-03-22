@@ -2,8 +2,9 @@ import process from "process";
 import dayjs from "dayjs";
 import crypto from 'crypto';
 
-type Payload = {
+export type Payload = {
     id: string;
+    login:string;
     expiresIn: number;
 }
 
@@ -28,16 +29,16 @@ const decrypt = (token: string, secretKey: string): Payload | null => {
     }
 };
 
-export const generateAccessToken = (userId: string): string => {
+export const generateAccessToken = (userId: string, login: string): string => {
     return encrypt(
-        { id: userId, expiresIn: dayjs().add(5, 'minute').unix() },
+        { id: userId, login, expiresIn: dayjs().add(5, 'minute').unix() },
         process.env.JWT_ACCESS_SECRET_KEY!
     );
 };
 
-export const generateRefreshToken = (userId: string): string => {
+export const generateRefreshToken = (userId: string, login: string): string => {
     return encrypt(
-        { id: userId, expiresIn: dayjs().add(3, 'hour').unix() },
+        { id: userId, login, expiresIn: dayjs().add(3, 'hour').unix() },
         process.env.JWT_REFRESH_SECRET_KEY!
     );
 };

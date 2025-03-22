@@ -16,6 +16,9 @@ cd ./board/server
 MONGO_URI=mongodb://admin:password@localhost:27017/
 JWT_ACCESS_SECRET_KEY - 32 byte
 JWT_REFRESH_SECRET_KEY - 32 byte
+CLIENT_ORIGIN=http://localhost:3001
+WS_PORT=8080
+APP_PORT=5000
 ```
 
 ### 3. 🐳 Запуск MongoDB через Docker
