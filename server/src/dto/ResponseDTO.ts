@@ -1,11 +1,9 @@
 // TODO: Подумать
 export class SuccessResponse<T = unknown> {
   readonly status = 'success'
-  readonly message?: string
   readonly payload?: T
 
-  constructor(message: string | undefined, payload?: T) {
-    this.message = message
+  constructor(payload?: T) {
     this.payload = payload
   }
 }

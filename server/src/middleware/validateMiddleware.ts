@@ -8,7 +8,7 @@ export const validate =
   (schema: AnySchema): RequestHandler =>
   async (req, res, next) => {
     try {
-      req.body = await schema.validate(req.body, {
+      await schema.validate(req.body, {
         abortEarly: false,
         stripUnknown: true,
       })

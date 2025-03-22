@@ -1,5 +1,6 @@
 import { WebSocketServer, WebSocket } from 'ws'
 
+import logger from '../logger/index.js'
 import { Card } from '../models/Cards.js'
 import { verifyAccessToken, type Payload } from '../utils/token.js'
 
@@ -30,7 +31,7 @@ export class WSServer {
 
   constructor(port: number) {
     this.wss = new WebSocketServer({ port })
-    console.log(`WebSocket server started on port ${port}`)
+    logger.info(`🚀 WebSocket server started on port ${port}`)
 
     this.init()
   }
@@ -61,7 +62,7 @@ export class WSServer {
 
   private addClient = (ws: WebSocket, payload: Payload) => {
     const { id: userId } = payload
-    console.log(`WebSocket client connected: ${userId}`)
+    logger.info(`WebSocket client connected: ${userId}`)
 
     const clientInfo: ClientInfo = { userId, socket: ws }
     this.clients.push(clientInfo)
@@ -72,7 +73,7 @@ export class WSServer {
 
     ws.on('close', () => {
       this.removeClient(ws)
-      console.log(`WebSocket client disconnected: ${userId}`)
+      logger.info(`WebSocket client disconnected: ${userId}`)
     })
   }
 
@@ -86,7 +87,8 @@ export class WSServer {
       const { id, type, position } = data
 
       if (!id || !type || !position) {
-        console.warn('Invalid message format:', data)
+        logger.warning('Invalid message format:', data)
+
         return
       }
 
@@ -98,7 +100,7 @@ export class WSServer {
 
       this.callChannels(payload.id, message)
     } catch (error) {
-      console.error('Failed to handle message', error)
+      logger.error('Failed to handle message', error)
     }
   }
 
@@ -115,14 +117,15 @@ export class WSServer {
     try {
       const card = await Card.findOne({ _id })
       if (!card) {
-        console.warn(`Card with id ${_id} not found`)
+        logger.warning(`Card with id ${_id} not found`)
+
         return
       }
 
       card.set({ x: position.x, y: position.y })
       card.save()
     } catch (error) {
-      console.error('Error saving card:', error)
+      logger.warning('Error saving card:', error)
     }
   }
 }

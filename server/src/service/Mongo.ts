@@ -1,5 +1,7 @@
 import mongoose from 'mongoose'
 
+import logger from '../logger/index.js'
+
 export class Mongo {
   constructor(url?: string) {
     if (!url) {
@@ -12,9 +14,10 @@ export class Mongo {
   private connect = async (url: string) => {
     try {
       await mongoose.connect(url)
-      console.log('[MongoDB] Connection established')
+
+      logger.info(`🚀 [MongoDB] Connection established`)
     } catch (error) {
-      console.error('[MongoDB] Connection failed:', error)
+      logger.error(`🛑 [MongoDB] Connection failed:`, error)
       throw error
     }
   }

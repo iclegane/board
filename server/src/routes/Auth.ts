@@ -42,9 +42,9 @@ router.post('/login', validate(loginSchema), async (req, res) => {
 
     res.setHeader('Authorization', `Bearer ${accessToken}`)
 
-    const response = new SuccessResponse('Login successfully', accessToken)
+    const response = new SuccessResponse(accessToken)
     res.status(HTTP_STATUS.OK).json(response)
-  } catch (error) {
+  } catch {
     const response = new ErrorResponse('Server error')
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response)
   }
@@ -65,11 +65,11 @@ router.post('/create', validate(registerSchema), async (req, res) => {
     const newUser = new User({ login, password: hashedPassword })
     const user = await newUser.save()
 
-    const response = new SuccessResponse('Created successfully', {
+    const response = new SuccessResponse({
       id: user.id,
     })
     res.status(HTTP_STATUS.OK).json(response)
-  } catch (error) {
+  } catch {
     const response = new ErrorResponse('Server error')
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response)
   }
@@ -83,9 +83,9 @@ router.post('/logout', async (_req, res) => {
       sameSite: 'strict',
     })
 
-    const response = new SuccessResponse('Logout successfully')
+    const response = new SuccessResponse()
     res.status(HTTP_STATUS.OK).json(response)
-  } catch (error) {
+  } catch {
     const response = new ErrorResponse('Server error')
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response)
   }
@@ -118,9 +118,9 @@ router.post('/refresh', async (req, res) => {
 
     res.setHeader('Authorization', `Bearer ${accessToken}`)
 
-    const response = new SuccessResponse('Refresh token success', accessToken)
+    const response = new SuccessResponse(accessToken)
     res.status(HTTP_STATUS.OK).json(response)
-  } catch (error) {
+  } catch {
     const response = new ErrorResponse('Server error')
     res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response)
   }

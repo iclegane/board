@@ -31,10 +31,9 @@ router.post(
       })
       const card = await cardSchema.save()
 
-      const response = new SuccessResponse('Card added', { id: card.id })
+      const response = new SuccessResponse({ id: card.id })
       res.json(response)
     } catch (error) {
-      console.log(error)
       const response = new ErrorResponse('Server error')
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response)
     }
@@ -47,7 +46,7 @@ router.get('/card', authMiddleware, async (_req: AuthRequest, res) => {
 
     const formattedCards = cardsSchema.map((card) => new CardDTO(card))
 
-    const response = new SuccessResponse(undefined, formattedCards)
+    const response = new SuccessResponse(formattedCards)
     res.json(response)
   } catch (error) {
     const response = new ErrorResponse('Server error')
@@ -71,7 +70,7 @@ router.delete(
         )
         res.status(HTTP_STATUS.BAD_REQUEST).json(response)
       }
-      const response = new SuccessResponse(`Card is deleted`, cardId)
+      const response = new SuccessResponse(cardId)
       res.json(response)
     } catch (error) {
       const response = new ErrorResponse('Server error')
