@@ -1,11 +1,11 @@
 import { Request, Router } from 'express'
 
 import { HTTP_STATUS } from '../constants/HttpStatus.js'
-import { authMiddleware } from '../middleware/authMiddleware.js'
-import { ErrorResponse, SuccessResponse } from '../dto/ResponseDTO.js'
-import { Card } from '../models/Cards.js'
 import { CardDTO } from '../dto/CardDTO.js'
+import { ErrorResponse, SuccessResponse } from '../dto/ResponseDTO.js'
+import { authMiddleware } from '../middleware/authMiddleware.js'
 import { validate } from '../middleware/validateMiddleware.js'
+import { Card } from '../models/Cards.js'
 import {
   addCardSchema,
   deleteCardSchema,

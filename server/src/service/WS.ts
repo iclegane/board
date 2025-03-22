@@ -1,6 +1,7 @@
 import { WebSocketServer, WebSocket } from 'ws'
-import { verifyAccessToken, type Payload } from '../utils/token.js'
+
 import { Card } from '../models/Cards.js'
+import { verifyAccessToken, type Payload } from '../utils/token.js'
 
 type ClientInfo = {
   socket: WebSocket

@@ -1,16 +1,16 @@
-import { Router } from 'express'
 import bcrypt from 'bcrypt'
+import { Router } from 'express'
 
 import { HTTP_STATUS } from '../constants/HttpStatus.js'
-import { User } from '../models/User.js'
+import { SuccessResponse, ErrorResponse } from '../dto/ResponseDTO.js'
 import { validate } from '../middleware/validateMiddleware.js'
-import { registerSchema, loginSchema } from '../validations/authValidation.js'
+import { User } from '../models/User.js'
 import {
   generateAccessToken,
   generateRefreshToken,
   verifyRefreshToken,
 } from '../utils/token.js'
-import { SuccessResponse, ErrorResponse } from '../dto/ResponseDTO.js'
+import { registerSchema, loginSchema } from '../validations/authValidation.js'
 
 const router = Router()
 
