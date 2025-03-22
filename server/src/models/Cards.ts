@@ -1,15 +1,19 @@
-import mongoose, { InferSchemaType } from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
+import mongoose, { InferSchemaType } from 'mongoose'
+import { v4 as uuidv4 } from 'uuid'
 
 const cardSchema = new mongoose.Schema(
-    {
-        name: { type: String, required: true },
-        x: { type: Number, default: 0 },
-        y: { type: Number, default: 0 },
-        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
+  {
+    name: { type: String, required: true },
+    x: { type: Number, default: 0 },
+    y: { type: Number, default: 0 },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
     },
-    { timestamps: true }
-);
+  },
+  { timestamps: true }
+)
 
-export type CardType = InferSchemaType<typeof cardSchema>;
-export const Card = mongoose.model('Card', cardSchema);
+export type CardType = InferSchemaType<typeof cardSchema>
+export const Card = mongoose.model('Card', cardSchema)

@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "tsx --watch ./src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "lint": "eslint --quiet --cache --report-unused-disable-directives",
+    "lint:fix": "eslint --fix --quiet --cache --report-unused-disable-directives",
+    "format": "prettier --write --ignore-unknown ./"
   },
   "author": "",
   "license": "ISC",
@@ -24,6 +27,7 @@
     "yup": "1.6.1"
   },
   "devDependencies": {
+    "typescript": "5.7.2",
     "@types/bcrypt": "5.0.2",
     "@types/cookie-parser": "1.4.8",
     "@types/cors": "2.8.17",
@@ -31,6 +35,13 @@
     "@types/node": "22.13.8",
     "@types/ws": "8.18.0",
     "tsx": "4.19.3",
-    "typescript": "5.8.2"
+    "@typescript-eslint/eslint-plugin": "8.19.0",
+    "@typescript-eslint/parser": "8.19.0",
+    "eslint": "9.17.0",
+    "eslint-plugin-import": "2.31.0",
+    "eslint-plugin-prettier": "5.2.1",
+    "eslint-plugin-react": "7.37.3",
+    "eslint-plugin-react-hooks": "5.1.0",
+    "prettier": "3.2.4"
   }
 }
