@@ -15,6 +15,7 @@ type FormValues = {
   passwordConfirmation: string
 }
 
+// Todo: Обработка ошибок и посмотреть register
 export const CreateAccountForm: React.FC = () => {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState<boolean>(false)

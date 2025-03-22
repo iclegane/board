@@ -14,6 +14,7 @@ type FormValues = {
   password: string
 }
 
+// Todo: Обработка ошибок и посмотреть register
 export const LoginForm: React.FC = () => {
   const { login: loginF } = useAuth()
   const [isLoading, setIsLoading] = useState<boolean>(false)
