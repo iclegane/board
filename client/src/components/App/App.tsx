@@ -1,46 +1,43 @@
 import React from 'react'
-import { BrowserRouter, Navigate, Routes, Route } from 'react-router'
+import { BrowserRouter, Routes, Route } from 'react-router'
 
-import { Board, NotFound, Login, CreateAccount } from '@/pages'
+import { PAGES_PATH } from '@/constants'
+import { Board, NotFound, Login, CreateAccount, Logout } from '@/pages'
+import { AuthOnly, GuestOnly } from '@/routes'
 
 import './App.css'
 
 export const App: React.FC = () => {
-  const isLogged = false // mock
-
-  const publicRoutes = (
-    <>
-      <Route
-        path='/login'
-        element={<Login />}
-      />
-      <Route
-        path='/create'
-        element={<CreateAccount />}
-      />
-      <Route
-        path='*'
-        element={<Navigate to='/login' />}
-      />
-    </>
-  )
-
-  const privateRoutes = (
-    <>
-      <Route
-        path='/board'
-        element={<Board />}
-      />
-      <Route
-        path='*'
-        element={<NotFound />}
-      />
-    </>
-  )
-
   return (
     <BrowserRouter>
-      <Routes>{isLogged ? privateRoutes : publicRoutes}</Routes>
+      <Routes>
+        <Route element={<AuthOnly />}>
+          <Route
+            path={PAGES_PATH.BOARD}
+            element={<Board />}
+          />
+          <Route
+            path={PAGES_PATH.LOGOUT}
+            element={<Logout />}
+          />
+        </Route>
+
+        <Route element={<GuestOnly />}>
+          <Route
+            path={PAGES_PATH.LOGIN}
+            element={<Login />}
+          />
+          <Route
+            path={PAGES_PATH.CREATE}
+            element={<CreateAccount />}
+          />
+        </Route>
+
+        <Route
+          path='*'
+          element={<NotFound />}
+        />
+      </Routes>
     </BrowserRouter>
   )
 }

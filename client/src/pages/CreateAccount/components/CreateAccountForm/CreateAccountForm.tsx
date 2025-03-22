@@ -1,64 +1,101 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { Controller, type SubmitHandler, useForm } from 'react-hook-form'
+import { useNavigate } from 'react-router'
 
-import { Button, Input, Password } from '@/components'
-import { useField } from '@/hooks'
+import { api } from '@/api/axios.ts'
+import { Button, Input } from '@/components'
+import { Plate } from '@/components/ui/Plate'
+import { API_PATH, PAGES_PATH } from '@/constants'
 
 import './styles.css'
 
-export const CreateAccountForm: React.FC<{}> = () => {
-  const login = useField<string | undefined>({
-    validator: (value) => !!value && value.length > 0,
-  })
-  const password = useField<string | undefined>({
-    validator: (value) => !!value && value.length > 0,
-  })
-  const passwordConfirm = useField<string | undefined>({
-    validator: (value) => !!value && value.length > 0,
-  })
+type FormValues = {
+  login: string
+  password: string
+  passwordConfirmation: string
+}
 
-  const isSubmitDisabled =
-    login.isError || password.isError || passwordConfirm.isError
+// Todo: Обработка ошибок и посмотреть register
+export const CreateAccountForm: React.FC = () => {
+  const navigate = useNavigate()
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const {
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>()
 
-  const handleOnFormSubmit = (e: React.FormEvent<HTMLFormElement>) =>
-    e.preventDefault()
+  const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    setIsLoading(true)
+    await api.post(API_PATH.CREATE, data)
+    navigate(PAGES_PATH.CREATE)
+    setIsLoading(false)
+  }
 
   return (
     <form
       name='create-form'
-      onSubmit={handleOnFormSubmit}
+      onSubmit={handleSubmit(onSubmit)}
       className={'login-form'}
     >
-      <Input
-        value={login.value}
-        status={login.isError ? 'error' : undefined}
-        onChange={login.handleChange}
-        name={'login'}
-        placeholder='Login'
+      <Controller
+        name='login'
+        control={control}
+        rules={{ required: 'Login is required' }}
+        render={({ field }) => (
+          <Input
+            {...field}
+            placeholder='Login'
+            status={errors.login ? 'error' : 'default'}
+          />
+        )}
       />
+      {errors.login && (
+        <Plate
+          status='error'
+          text={errors.login.message}
+        />
+      )}
+      <Controller
+        name='password'
+        control={control}
+        rules={{ required: 'Password is required' }}
+        render={({ field }) => (
+          <Input
+            {...field}
+            placeholder='Password'
+            status={errors.password ? 'error' : 'default'}
+          />
+        )}
+      />
+      {errors.password && (
+        <Plate
+          status='error'
+          text={errors.password.message}
+        />
+      )}
+      <Controller
+        name='passwordConfirmation'
+        control={control}
+        rules={{ required: 'passwordConfirm is required' }}
+        render={({ field }) => (
+          <Input
+            {...field}
+            placeholder='Repeat the password'
+            status={errors.passwordConfirmation ? 'error' : 'default'}
+          />
+        )}
+      />
+      {errors.passwordConfirmation && (
+        <Plate
+          status='error'
+          text={errors.passwordConfirmation.message}
+        />
+      )}
 
-      <Password
-        value={password.value}
-        status={password.isError ? 'error' : undefined}
-        onChange={password.handleChange}
-        name={'password'}
-        placeholder='Password'
-        showPasswordBtn
-      />
-      <Password
-        value={passwordConfirm.value}
-        status={passwordConfirm.isError ? 'error' : undefined}
-        onChange={passwordConfirm.handleChange}
-        name={'passwordConfirm'}
-        placeholder='Repeat the password'
-        showPasswordBtn
-      />
+      <Button type={'submit'}>Create account</Button>
 
-      <Button
-        type={'submit'}
-        disabled={isSubmitDisabled}
-      >
-        Create account
-      </Button>
+      {isLoading && 'loading...'}
     </form>
   )
 }
