@@ -3,7 +3,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 const cardSchema = new mongoose.Schema(
     {
-        id: { type: String, default: uuidv4, unique: true },
         name: { type: String, required: true },
         x: { type: Number, default: 0 },
         y: { type: Number, default: 0 },
