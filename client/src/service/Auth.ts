@@ -1,5 +1,6 @@
 import { api } from '@/api/axios.ts'
 import { ACCESS_TOKEN_KEY, API_PATH } from '@/constants'
+import { WebSocketService } from '@/service/WebSocket.ts'
 
 type ApiPayload = {
   payload: string
@@ -23,6 +24,8 @@ class Auth {
       localStorage.setItem(ACCESS_TOKEN_KEY, token)
     } catch (error) {
       throw error
+    } finally {
+      WebSocketService.reconnectManually()
     }
   }
 
@@ -33,6 +36,7 @@ class Auth {
       throw error
     } finally {
       localStorage.removeItem(ACCESS_TOKEN_KEY)
+      WebSocketService.stop()
     }
   }
 
@@ -51,6 +55,8 @@ class Auth {
     } catch (error) {
       localStorage.removeItem(ACCESS_TOKEN_KEY)
       throw error
+    } finally {
+      WebSocketService.reconnectManually()
     }
   }
 }
