@@ -111,11 +111,11 @@ export class WSServer {
     })
   }
 
-  private saveCardPosition = async (id: string, position: Position) => {
+  private saveCardPosition = async (_id: string, position: Position) => {
     try {
-      const card = await Card.findOne({ id })
+      const card = await Card.findOne({ _id })
       if (!card) {
-        console.warn(`Card with id ${id} not found`)
+        console.warn(`Card with id ${_id} not found`)
         return
       }
 

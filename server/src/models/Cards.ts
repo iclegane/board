@@ -14,5 +14,5 @@ const cardSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
-export type CardType = InferSchemaType<typeof cardSchema>
+export type CardType = InferSchemaType<typeof cardSchema> & { _id: string }
 export const Card = mongoose.model('Card', cardSchema)
