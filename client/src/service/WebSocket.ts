@@ -19,7 +19,7 @@ class WS {
     this.connect()
   }
 
-  private connect() {
+  private connect = () => {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) return
     if (this.hasAuthError) return
 
@@ -67,7 +67,7 @@ class WS {
     }
   }
 
-  private isReady(): boolean {
+  private isReady = (): boolean => {
     return this.socket.readyState === WebSocket.OPEN
   }
 

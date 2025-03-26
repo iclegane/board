@@ -4,6 +4,7 @@ import { api } from '@/api/axios'
 import { Card, Menu, RightMenu } from '@/components'
 import { API_PATH } from '@/constants'
 import { useLatest } from '@/hooks'
+import { CursorSharing } from '@/pages/Board/components'
 import { Position } from '@/types'
 import { rafThrottle } from '@/utils'
 
@@ -209,6 +210,11 @@ export const Board: React.FC = () => {
           backgroundPositionY: position.y,
           backgroundSize: `${500 * zoom}px`,
         }}
+      />
+      <CursorSharing
+        x={position.x}
+        y={position.y}
+        zoom={zoom}
       />
       <div
         className='board-content'
