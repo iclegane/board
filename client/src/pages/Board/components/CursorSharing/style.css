@@ -1,0 +1,34 @@
+.miro-cursor {
+    position: absolute;
+    /*transform: translate(-50%, -50%);*/
+    pointer-events: none;
+    user-select: none;
+    --cursor-color: #3B82F6; /* по умолчанию синий */
+}
+
+.cursor-pointer {
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 10px solid var(--cursor-color);
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.3));
+    transform: rotate(18deg);
+    margin: 0 auto;
+    position: absolute;
+    top: -4px;
+    left: -11px;
+}
+
+.cursor-label {
+    background-color: var(--cursor-color);
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+    margin-top: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    text-align: center;
+}

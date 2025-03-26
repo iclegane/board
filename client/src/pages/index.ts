@@ -1,4 +1,5 @@
 export { Board } from './Board'
 export { NotFound } from './NotFound'
 export { Login } from './Login'
+export { Logout } from './Logout'
 export { CreateAccount } from './CreateAccount'

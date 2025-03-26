@@ -1,12 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { v4 as uuidv4 } from 'uuid'
 
-import './Board.css'
-
-import { Card, Menu } from '@/components'
+import { api } from '@/api/axios'
+import { Card, Menu, RightMenu } from '@/components'
+import { API_PATH } from '@/constants'
 import { useLatest } from '@/hooks'
+import { CursorSharing } from '@/pages/Board/components'
 import { Position } from '@/types'
 import { rafThrottle } from '@/utils'
+
+import './Board.css'
 
 type CardType = {
   id: string
@@ -83,18 +85,27 @@ export const Board: React.FC = () => {
     })
   }
 
-  const handleAddCard = (): void => {
-    setCards((prev) => [
-      ...prev,
-      {
-        id: uuidv4(),
-        name: `Карточка ${prev.length + 1}`,
-        coordinates: {
-          x: (-position.x + (window.innerWidth - cardWidth) / 2) / zoom,
-          y: (-position.y + (window.innerHeight - cardHeight) / 2) / zoom,
+  const handleAddCard = async () => {
+    try {
+      const name = 'Card'
+      const x = (-position.x + (window.innerWidth - cardWidth) / 2) / zoom
+      const y = (-position.y + (window.innerHeight - cardHeight) / 2) / zoom
+      const response = await api.post('/board/card', { name, x, y })
+      const id = response.data.payload.id
+      setCards((prev) => [
+        ...prev,
+        {
+          id,
+          name,
+          coordinates: {
+            x,
+            y,
+          },
         },
-      },
-    ])
+      ])
+    } catch (e) {
+      console.log(e)
+    }
   }
 
   const handleEditCardText = useCallback((id: string, text?: string) => {
@@ -167,6 +178,20 @@ export const Board: React.FC = () => {
     }
   }, [zoomCb, handleMouseMoveCb, handleWheelCb])
 
+  useEffect(() => {
+    const getCards = async () => {
+      try {
+        const response = await api.get(API_PATH.CARD)
+        const cards = response.data.payload
+        setCards(cards)
+      } catch (e) {
+        console.error(e)
+      }
+    }
+
+    getCards()
+  }, [])
+
   return (
     <div className='board'>
       <Menu
@@ -174,6 +199,7 @@ export const Board: React.FC = () => {
         onBack={handleBackPosition}
         onAddCard={handleAddCard}
       />
+      <RightMenu />
       <div
         ref={backgroundRef}
         className='board-background'
@@ -184,6 +210,11 @@ export const Board: React.FC = () => {
           backgroundPositionY: position.y,
           backgroundSize: `${500 * zoom}px`,
         }}
+      />
+      <CursorSharing
+        x={position.x}
+        y={position.y}
+        zoom={zoom}
       />
       <div
         className='board-content'
