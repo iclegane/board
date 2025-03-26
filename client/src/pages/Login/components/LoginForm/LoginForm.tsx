@@ -1,25 +1,24 @@
 import React, { useState } from 'react'
-import { useForm, type SubmitHandler, Controller } from 'react-hook-form'
+import { useForm, type SubmitHandler } from 'react-hook-form'
 import { useNavigate } from 'react-router'
 
 import { Button, Input, Password } from '@/components'
 import { Plate } from '@/components/ui/Plate'
+import { PAGES_PATH } from '@/constants'
 import { useAuth } from '@/context/AuthContext.tsx'
 
 import './styles.css'
-import { PAGES_PATH } from '@/constants'
 
 type FormValues = {
   login: string
   password: string
 }
 
-// Todo: Обработка ошибок и посмотреть register
 export const LoginForm: React.FC = () => {
   const { login: loginF } = useAuth()
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const {
-    control,
+    register,
     handleSubmit,
     formState: { errors },
   } = useForm<FormValues>()
@@ -39,17 +38,20 @@ export const LoginForm: React.FC = () => {
       className='login-form'
       onSubmit={handleSubmit(onSubmit)}
     >
-      <Controller
-        name='login'
-        control={control}
-        rules={{ required: 'Login is required' }}
-        render={({ field }) => (
-          <Input
-            {...field}
-            placeholder='Login'
-            status={errors.login ? 'error' : 'default'}
-          />
-        )}
+      <Input
+        {...register('login', {
+          required: 'Login is required',
+          minLength: {
+            value: 3,
+            message: 'Login must be at least 3 characters',
+          },
+          pattern: {
+            value: /^[a-zA-Z0-9_]+$/,
+            message: 'Invalid login format',
+          },
+        })}
+        placeholder='Login'
+        status={errors.login ? 'error' : 'default'}
       />
       {errors.login && (
         <Plate
@@ -57,25 +59,17 @@ export const LoginForm: React.FC = () => {
           text={errors.login.message}
         />
       )}
-
-      <Controller
-        name='password'
-        control={control}
-        rules={{
+      <Password
+        {...register('password', {
           required: 'Password is required',
           minLength: {
             value: 6,
             message: 'Password must be at least 6 characters',
           },
-        }}
-        render={({ field }) => (
-          <Password
-            {...field}
-            placeholder='Password'
-            status={errors.password ? 'error' : 'default'}
-            showPasswordBtn
-          />
-        )}
+        })}
+        placeholder='Password'
+        status={errors.password ? 'error' : 'default'}
+        showPasswordBtn
       />
       {errors.password && (
         <Plate

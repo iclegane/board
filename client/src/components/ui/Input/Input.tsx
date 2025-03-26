@@ -10,7 +10,7 @@ export type InputStatus = 'default' | 'error' | 'success' | 'warning' | 'info'
 type BaseInputProps = {
   value?: string
   placeholder?: string
-  onChange?: (value: string | undefined) => void
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
   disabled?: boolean
   isValid?: boolean
   status?: InputStatus
@@ -33,7 +33,7 @@ export const Input = forwardRef<HTMLInputElement, BaseInputProps>(
     ref
   ) => {
     const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      onChange?.(e.target.value)
+      onChange?.(e)
     }
 
     return (
