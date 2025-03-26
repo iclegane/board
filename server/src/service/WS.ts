@@ -14,8 +14,9 @@ type Position = {
   y: number
 }
 
+// Todo Сделать шаблонный тип для message
 type Message = {
-  id: string
+  id?: string
   type: 'start' | 'move' | 'end'
   position: Position
 }
@@ -86,21 +87,21 @@ export class WSServer {
       const data: Partial<Message> = JSON.parse(rawMessage)
       const { id, type, position } = data
 
-      if (!id || !type || !position) {
-        logger.warning('Invalid message format:', data)
+      if (!type || !position) {
+        logger.error('Invalid message format')
 
         return
       }
 
       const message = { from: payload, id, position, type }
 
-      if (type === 'end') {
-        this.saveCardPosition(id, position)
+      if (id && type === 'end') {
+        await this.saveCardPosition(id, position)
       }
 
       this.callChannels(payload.id, message)
     } catch (error) {
-      logger.error('Failed to handle message', error)
+      logger.error('Critical Failed to handle message')
     }
   }
 
@@ -125,7 +126,7 @@ export class WSServer {
       card.set({ x: position.x, y: position.y })
       card.save()
     } catch (error) {
-      logger.warning('Error saving card:', error)
+      logger.warning('Error saving card')
     }
   }
 }
