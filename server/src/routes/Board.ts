@@ -79,4 +79,4 @@ router.delete(
   }
 )
 
-export default router
+export const boardRouter = router

@@ -165,4 +165,4 @@ router.post('/check', async (req, res) => {
   }
 })
 
-export default router
+export const authRouter = router

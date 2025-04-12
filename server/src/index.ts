@@ -8,8 +8,7 @@ import {
   initWS,
 } from './init/index.js'
 import logger from './logger/index.js'
-import Auth from './routes/Auth.js'
-import Board from './routes/Board.js'
+import { authRouter, boardRouter } from './routes/index.js'
 
 const app = express()
 
@@ -24,8 +23,8 @@ initMiddlewares(app)
 initProcessSignals()
 
 // --- Routes ---
-app.use('/api/v1/auth', Auth)
-app.use('/api/v1/board', Board)
+app.use('/api/v1/auth', authRouter)
+app.use('/api/v1/board', boardRouter)
 
 // --- Start server ---
 app.listen(CONFIG.PORT, () => {
