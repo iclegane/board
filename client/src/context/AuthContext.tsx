@@ -13,7 +13,13 @@ type AuthProvider = {
   children: React.ReactNode
 }
 
+type UserData = {
+  id: string
+  login: string
+}
+
 type AuthContextType = {
+  user: UserData | null
   isLogged: boolean
   login: (login: string, password: string) => Promise<void>
   logout: () => Promise<void>
@@ -22,12 +28,12 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export const AuthProvider: React.FC<AuthProvider> = ({ children }) => {
-  const [isLogged, setIsLogged] = useState(false)
+  const [user, setUser] = useState<UserData | null>(null)
 
   const login = useCallback(async (login: string, password: string) => {
     try {
-      await AuthService.login(login, password)
-      setIsLogged(true)
+      const user = await AuthService.login(login, password)
+      setUser(user)
     } catch (error) {
       console.error('Login failed:', error)
     }
@@ -37,23 +43,23 @@ export const AuthProvider: React.FC<AuthProvider> = ({ children }) => {
     try {
       await AuthService.logout()
     } finally {
-      setIsLogged(false)
+      setUser(null)
     }
   }, [])
 
   const value = useMemo(
-    () => ({ login, logout, isLogged }),
-    [login, logout, isLogged]
+    () => ({ login, logout, isLogged: Boolean(user), user }),
+    [login, logout, user]
   )
 
+  // Todo: Подумать над лоудером
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = await AuthService.refresh()
-
-        setIsLogged(Boolean(token))
+        const user = await AuthService.check()
+        setUser(user)
       } catch {
-        setIsLogged(false)
+        setUser(null)
       }
     }
     checkAuth()

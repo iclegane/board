@@ -17,27 +17,33 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-let isRetried = false
+let refreshTokenPromise: null | Promise<string | undefined> = null
 
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    const requestUrl = error.config.url
+
     if (
       error.response?.status === 401 &&
-      error.config.url !== API_PATH.REFRESH &&
-      !isRetried
+      requestUrl !== API_PATH.REFRESH &&
+      requestUrl !== API_PATH.CHECK
     ) {
-      try {
-        const token = await AuthService.refresh()
+      if (!refreshTokenPromise) {
+        refreshTokenPromise = AuthService.refresh().finally(() => {
+          refreshTokenPromise = null
+        })
+      }
 
-        error.config.headers.Authorization = `${BEARER_PREFIX} ${token}`
+      try {
+        const updatedToken = await refreshTokenPromise
+        error.config.headers.Authorization = `${BEARER_PREFIX} ${updatedToken}`
         return api.request(error.config)
       } catch {
         return Promise.reject(error)
-      } finally {
-        isRetried = true
       }
     }
+
     return Promise.reject(error)
   }
 )

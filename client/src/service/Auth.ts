@@ -2,26 +2,41 @@ import { api } from '@/api/axios.ts'
 import { ACCESS_TOKEN_KEY, API_PATH } from '@/constants'
 import { WebSocketService } from '@/service/WebSocket.ts'
 
-type ApiPayload = {
-  payload: string
+type UserData = {
+  id: string
+  login: string
 }
 
+type LoginResponse = UserData & {
+  accessToken: string
+}
+
+type ApiPayload<T> = {
+  payload: T
+}
+
+// Todo: Вынести сохранения/запись ls в отдельные сервис
 class Auth {
   constructor() {}
 
-  getToken(): string | null {
+  getToken = (): string | null => {
     return localStorage.getItem(ACCESS_TOKEN_KEY)
   }
 
-  async login(login: string, password: string) {
+  login = async (login: string, password: string): Promise<UserData> => {
     try {
-      const response = await api.post<ApiPayload>(API_PATH.LOGIN, {
-        login,
-        password,
-      })
+      const response = await api.post<ApiPayload<LoginResponse>>(
+        API_PATH.LOGIN,
+        {
+          login,
+          password,
+        }
+      )
 
-      const token = response.data.payload
-      localStorage.setItem(ACCESS_TOKEN_KEY, token)
+      const { accessToken, ...props } = response.data.payload
+      localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
+
+      return props
     } catch (error) {
       throw error
     } finally {
@@ -29,7 +44,7 @@ class Auth {
     }
   }
 
-  async logout() {
+  logout = async () => {
     try {
       await api.post(API_PATH.LOGOUT)
     } catch (error) {
@@ -40,23 +55,33 @@ class Auth {
     }
   }
 
-  async refresh(): Promise<string | undefined> {
+  refresh = async (): Promise<string | undefined> => {
     try {
-      const response = await api.post<ApiPayload>(
+      const response = await api.post<ApiPayload<LoginResponse>>(
         API_PATH.REFRESH,
         {},
         { withCredentials: true }
       )
 
-      const token = response.data.payload
-      localStorage.setItem(ACCESS_TOKEN_KEY, token)
+      const { accessToken } = response.data.payload
+      localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
 
-      return token
+      return accessToken
     } catch (error) {
       localStorage.removeItem(ACCESS_TOKEN_KEY)
       throw error
     } finally {
       WebSocketService.reconnectManually()
+    }
+  }
+
+  check = async (): Promise<UserData> => {
+    try {
+      const response = await api.post<ApiPayload<UserData>>(API_PATH.CHECK)
+      return response.data.payload
+    } catch (error) {
+      localStorage.removeItem(ACCESS_TOKEN_KEY)
+      throw error
     }
   }
 }
