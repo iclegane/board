@@ -28,8 +28,8 @@ export const Card = memo(
     const [tempPosition, setTempPosition] = useState<Position | null>(null)
     const [dragging, setDragging] = useState(false)
 
-    const idCb = useLatest(id)
-    const tempPositionCb = useLatest(tempPosition)
+    const idRef = useLatest(id)
+    const tempPositionRef = useLatest(tempPosition)
 
     const [isRemoteDragging, setIsRemoteDragging] = useState(false)
     const [remoteLogin, setRemoteLogin] = useState(null)
@@ -167,7 +167,7 @@ export const Card = memo(
     // Подписка WebSocketService
     useEffect(() => {
       const handleMessage = (msg: Message) => {
-        if (idCb.current === msg.id) {
+        if (idRef.current === msg.id) {
           setRemoteLogin(msg.from.login)
           if (msg.type === 'start' || msg.type === 'move') {
             setTempPosition(msg.position)
@@ -179,8 +179,8 @@ export const Card = memo(
             setIsRemoteDragging(false)
             setRemoteLogin(null)
 
-            if (tempPositionCb.current) {
-              onMoveEnd(id, { ...tempPositionCb.current })
+            if (tempPositionRef.current) {
+              onMoveEnd(id, { ...tempPositionRef.current })
             }
           }
         }
@@ -190,7 +190,7 @@ export const Card = memo(
       return () => {
         WebSocketService.offMessage(handleMessage)
       }
-    }, [idCb, tempPositionCb])
+    }, [idRef, tempPositionRef])
 
     return (
       <div
