@@ -1,4 +1,5 @@
 import { ACCESS_TOKEN_KEY, WS_URL } from '@/constants'
+import { QueueService } from '@/service/Queue.ts'
 
 export type Message = { type: string; [key: string]: any }
 type Callback = (message: Message) => void
@@ -6,7 +7,7 @@ type Callback = (message: Message) => void
 class WS {
   private socket!: WebSocket
   private listeners: Set<Callback> = new Set()
-  private messageQueue: string[] = []
+  private messageQueue = new QueueService<string>()
 
   private reconnectAttempts = 0
   private maxReconnectAttempts = 5
@@ -62,8 +63,9 @@ class WS {
   }
 
   private flushQueue = () => {
-    while (this.messageQueue.length && this.isReady()) {
-      this.socket?.send(this.messageQueue.shift()!)
+    while (this.messageQueue.size > 0 && this.isReady()) {
+      const message = this.messageQueue.dequeue()
+      if (message) this.socket?.send(message)
     }
   }
 
@@ -82,7 +84,7 @@ class WS {
     if (this.isReady()) {
       this.socket?.send(str)
     } else {
-      this.messageQueue.push(str)
+      this.messageQueue.enqueue(str)
     }
   }
 
