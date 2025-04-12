@@ -1,29 +1,10 @@
 import { WebSocketServer, WebSocket } from 'ws'
 
-import logger from '../logger/index.js'
-import { Card } from '../models/Cards.js'
-import { verifyAccessToken, type Payload } from '../utils/token.js'
-
-type ClientInfo = {
-  socket: WebSocket
-  userId: string
-}
-
-type Position = {
-  x: number
-  y: number
-}
-
-// Todo Сделать шаблонный тип для message
-type Message = {
-  id?: string
-  type: 'start' | 'move' | 'end'
-  position: Position
-}
-
-type ResponseMessage = {
-  from: Payload
-} & Message
+import { ClientInfo, Message, ResponseMessage } from './types.js'
+import { WSMessageHandler } from './ws-handlers.js'
+import { WSMessageValidator } from './ws-validators.js'
+import { SystemLogger } from '../../logger/index.js'
+import { verifyAccessToken, type Payload } from '../../utils/token.js'
 
 // https://ably.com/blog/websocket-authentication
 export class WSServer {
@@ -32,7 +13,7 @@ export class WSServer {
 
   constructor(port: number) {
     this.wss = new WebSocketServer({ port })
-    logger.info(`🚀 WebSocket server started on port ${port}`)
+    SystemLogger.info(`🚀 WebSocket server started on port ${port}`)
 
     this.init()
   }
@@ -63,7 +44,7 @@ export class WSServer {
 
   private addClient = (ws: WebSocket, payload: Payload) => {
     const { id: userId } = payload
-    logger.info(`WebSocket client connected: ${userId}`)
+    SystemLogger.info(`WebSocket client connected: ${userId}`)
 
     const clientInfo: ClientInfo = { userId, socket: ws }
     this.clients.push(clientInfo)
@@ -74,7 +55,7 @@ export class WSServer {
 
     ws.on('close', () => {
       this.removeClient(ws)
-      logger.info(`WebSocket client disconnected: ${userId}`)
+      SystemLogger.info(`WebSocket client disconnected: ${userId}`)
     })
   }
 
@@ -85,23 +66,29 @@ export class WSServer {
   private handleMessage = async (payload: Payload, rawMessage: string) => {
     try {
       const data: Partial<Message> = JSON.parse(rawMessage)
-      const { id, type, position } = data
 
-      if (!type || !position) {
-        logger.error('Invalid message format')
+      const baseMessage = await WSMessageValidator.validateBaseMessage(data)
+      if (!baseMessage) return
 
-        return
+      switch (baseMessage.type) {
+        case 'end': {
+          const endMessage = await WSMessageValidator.validateEndMessage(data)
+          if (endMessage) {
+            await WSMessageHandler.handleCardPosition(
+              endMessage.id,
+              endMessage.position
+            )
+          }
+          break
+        }
       }
 
+      const { id, type, position } = baseMessage
       const message = { from: payload, id, position, type }
 
-      if (id && type === 'end') {
-        await this.saveCardPosition(id, position)
-      }
-
-      this.callChannels(payload.id, message)
+      this.callChannels(payload.id, message as ResponseMessage)
     } catch (error) {
-      logger.error('Critical Failed to handle message')
+      SystemLogger.error('Critical Failed to handle message')
     }
   }
 
@@ -112,21 +99,5 @@ export class WSServer {
         socket.send(json)
       }
     })
-  }
-
-  private saveCardPosition = async (_id: string, position: Position) => {
-    try {
-      const card = await Card.findOne({ _id })
-      if (!card) {
-        logger.warning(`Card with id ${_id} not found`)
-
-        return
-      }
-
-      card.set({ x: position.x, y: position.y })
-      card.save()
-    } catch (error) {
-      logger.warning('Error saving card')
-    }
   }
 }
