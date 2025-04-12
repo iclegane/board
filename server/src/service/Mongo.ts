@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 
-import logger from '../logger/index.js'
+import { SystemLogger } from '../logger/index.js'
 
 export class Mongo {
   constructor(url?: string) {
@@ -15,9 +15,9 @@ export class Mongo {
     try {
       await mongoose.connect(url)
 
-      logger.info(`🚀 [MongoDB] Connection established`)
+      SystemLogger.info(`🚀 [MongoDB] Connection established`)
     } catch (error) {
-      logger.error(`🛑 [MongoDB] Connection failed:`, error)
+      SystemLogger.error(`🛑 [MongoDB] Connection failed`)
       throw error
     }
   }

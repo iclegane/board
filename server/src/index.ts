@@ -7,7 +7,7 @@ import {
   initMongo,
   initWS,
 } from './init/index.js'
-import logger from './logger/index.js'
+import { SystemLogger } from './logger/index.js'
 import { authRouter, boardRouter } from './routes/index.js'
 
 const app = express()
@@ -28,5 +28,5 @@ app.use('/api/v1/board', boardRouter)
 
 // --- Start server ---
 app.listen(CONFIG.PORT, () => {
-  logger.info(`🚀 Server running at http://localhost:${CONFIG.PORT}`)
+  SystemLogger.info(`🚀 Server running at http://localhost:${CONFIG.PORT}`)
 })
