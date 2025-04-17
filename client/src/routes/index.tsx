@@ -11,9 +11,11 @@ export const AuthOnly: React.FC = () => {
     return null
   }
 
-  return isLogged ? (
-    <Outlet />
-  ) : (
+  if (isLogged) {
+    return <Outlet />
+  }
+
+  return (
     <Navigate
       to={PAGES_PATH.LOGIN}
       replace
@@ -28,12 +30,14 @@ export const GuestOnly: React.FC = () => {
     return null
   }
 
-  return isLogged || isCheckAuthLoading ? (
-    <Navigate
-      to={PAGES_PATH.BOARD}
-      replace
-    />
-  ) : (
-    <Outlet />
-  )
+  if (isLogged) {
+    return (
+      <Navigate
+        to={PAGES_PATH.BOARD}
+        replace
+      />
+    )
+  }
+
+  return <Outlet />
 }

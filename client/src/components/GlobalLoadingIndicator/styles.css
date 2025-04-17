@@ -1,29 +1,23 @@
-.global-loader-container {
-    position: relative;
-    width: 100%;
-    height: 100%;
-}
-
-.global-loader-overlay {
-    position: absolute;
+.global-loader {
+    position: fixed;
     inset: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     background: rgba(255, 255, 255, 0.86);
-    z-index: 1000;
     backdrop-filter: blur(4px);
+    z-index: 9999;
     animation: fadeIn 0.2s ease-out forwards;
 }
 
-.global-loader-content {
+.global-loader__content {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 1rem;
 }
 
-.global-loader-spinner {
+.global-loader__spinner {
     width: 48px;
     height: 48px;
     border-radius: 50%;
@@ -34,7 +28,7 @@
     animation: rotation 1s linear infinite;
 }
 
-.global-loader-spinner::after {
+.global-loader__spinner::after {
     content: '';
     box-sizing: border-box;
     position: absolute;
@@ -48,7 +42,7 @@
     animation: rotation 0.5s linear infinite reverse;
 }
 
-.global-loader-text {
+.global-loader__text {
     color: #334155;
     font-size: 1rem;
     font-weight: 500;

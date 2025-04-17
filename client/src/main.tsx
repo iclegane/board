@@ -9,9 +9,8 @@ import './index.css'
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <AuthProvider>
-      <GlobalLoadingIndicator>
-        <App />
-      </GlobalLoadingIndicator>
+      <GlobalLoadingIndicator />
+      <App />
     </AuthProvider>
   </React.StrictMode>
 )

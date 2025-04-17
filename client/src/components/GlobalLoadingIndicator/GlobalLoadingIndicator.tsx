@@ -1,27 +1,24 @@
-import React, { ReactNode } from 'react'
+import React from 'react'
+import { createPortal } from 'react-dom'
 
 import { useAuth } from '@/context/AuthContext.tsx'
 
 import './styles.css'
 
-type Props = {
-  children: ReactNode
-}
+const loaderRoot = document.getElementById('widgets')
 
-export const GlobalLoadingIndicator: React.FC<Props> = ({ children }) => {
+export const GlobalLoadingIndicator: React.FC = () => {
   const { isCheckAuthLoading } = useAuth()
 
-  return (
-    <div className='global-loader-container'>
-      {children}
-      {isCheckAuthLoading && (
-        <div className='global-loader-overlay'>
-          <div className='global-loader-content'>
-            <span className='global-loader-spinner'></span>
-            <span className='global-loader__text'>Loading...</span>
-          </div>
-        </div>
-      )}
-    </div>
+  if (!isCheckAuthLoading || !loaderRoot) return null
+
+  return createPortal(
+    <div className='global-loader'>
+      <div className='global-loader__content'>
+        <div className='global-loader__spinner'></div>
+        <span className='global-loader__text'>Loading...</span>
+      </div>
+    </div>,
+    loaderRoot
   )
 }
