@@ -1,20 +1,16 @@
 import express from 'express'
 
 import { CONFIG } from './config/index.js'
-import {
-  initMiddlewares,
-  initProcessSignals,
-  initMongo,
-  initWS,
-} from './init/index.js'
+import { initMiddlewares, initProcessSignals, initMongo } from './init/index.js'
 import { SystemLogger } from './logger/index.js'
 import { authRouter, boardRouter } from './routes/index.js'
+import { WSServer } from './service/index.js'
 
 const app = express()
 
 // --- Init external services ---
-initWS(Number(CONFIG.WS_PORT))
-initMongo(CONFIG.MONGO_URI)
+new WSServer(Number(CONFIG.WS_PORT))
+await initMongo(CONFIG.MONGO_URI)
 
 // --- Middlewares ---
 initMiddlewares(app)
