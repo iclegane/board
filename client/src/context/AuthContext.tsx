@@ -23,12 +23,14 @@ type AuthContextType = {
   isLogged: boolean
   login: (login: string, password: string) => Promise<void>
   logout: () => Promise<void>
+  isCheckAuthLoading: boolean
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export const AuthProvider: React.FC<AuthProvider> = ({ children }) => {
   const [user, setUser] = useState<UserData | null>(null)
+  const [isCheckAuthLoading, setCheckAuthLoading] = useState(false)
 
   const login = useCallback(async (login: string, password: string) => {
     try {
@@ -48,18 +50,26 @@ export const AuthProvider: React.FC<AuthProvider> = ({ children }) => {
   }, [])
 
   const value = useMemo(
-    () => ({ login, logout, isLogged: Boolean(user), user }),
-    [login, logout, user]
+    () => ({
+      login,
+      logout,
+      isLogged: Boolean(user),
+      user,
+      isCheckAuthLoading,
+    }),
+    [login, logout, user, isCheckAuthLoading]
   )
 
-  // Todo: Подумать над лоудером
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        setCheckAuthLoading(true)
         const user = await AuthService.check()
         setUser(user)
       } catch {
         setUser(null)
+      } finally {
+        setCheckAuthLoading(false)
       }
     }
     checkAuth()
