@@ -5,11 +5,14 @@ import { initMiddlewares, initProcessSignals, initMongo } from './init/index.js'
 import { SystemLogger } from './logger/index.js'
 import { authRouter, boardRouter } from './routes/index.js'
 import { WSServer } from './service/index.js'
+import { BoardHandler } from './service/WS/board-handler.js'
 
 const app = express()
 
 // --- Init external services ---
-new WSServer(Number(CONFIG.WS_PORT))
+const wsServer = new WSServer(Number(CONFIG.WS_PORT))
+new BoardHandler(wsServer)
+
 await initMongo(CONFIG.MONGO_URI)
 
 // --- Middlewares ---

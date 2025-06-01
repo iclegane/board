@@ -1,3 +1,5 @@
+import axios from 'axios'
+
 import { api } from '@/api/axios.ts'
 import { ACCESS_TOKEN_KEY, API_PATH } from '@/constants'
 import { WebSocketService } from '@/service/WebSocket.ts'
@@ -38,7 +40,11 @@ class Auth {
 
       return props
     } catch (error) {
-      throw error
+      if (axios.isAxiosError(error)) {
+        const message = error.response?.data?.message || 'Login failed'
+        throw new Error(message)
+      }
+      throw new Error('An unexpected error occurred')
     } finally {
       WebSocketService.reconnectManually()
     }
@@ -48,7 +54,11 @@ class Auth {
     try {
       await api.post(API_PATH.LOGOUT)
     } catch (error) {
-      throw error
+      if (axios.isAxiosError(error)) {
+        const message = error.response?.data?.message || 'Logout failed'
+        throw new Error(message)
+      }
+      throw new Error('An unexpected error occurred')
     } finally {
       localStorage.removeItem(ACCESS_TOKEN_KEY)
       WebSocketService.stop()
@@ -67,9 +77,9 @@ class Auth {
       localStorage.setItem(ACCESS_TOKEN_KEY, accessToken)
 
       return accessToken
-    } catch (error) {
+    } catch {
       localStorage.removeItem(ACCESS_TOKEN_KEY)
-      throw error
+      throw new Error('Session expired. Please login again.')
     } finally {
       WebSocketService.reconnectManually()
     }
@@ -77,7 +87,11 @@ class Auth {
 
   check = async (): Promise<UserData> => {
     try {
-      const response = await api.post<ApiPayload<UserData>>(API_PATH.CHECK)
+      const response = await api.post<ApiPayload<UserData>>(
+        API_PATH.CHECK,
+        {},
+        { withCredentials: true }
+      )
       return response.data.payload
     } catch (error) {
       localStorage.removeItem(ACCESS_TOKEN_KEY)

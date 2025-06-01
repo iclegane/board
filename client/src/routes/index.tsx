@@ -41,3 +41,27 @@ export const GuestOnly: React.FC = () => {
 
   return <Outlet />
 }
+
+export const RootRedirect: React.FC = () => {
+  const { isLogged, isCheckAuthLoading } = useAuth()
+
+  if (isCheckAuthLoading) {
+    return null
+  }
+
+  if (isLogged) {
+    return (
+      <Navigate
+        to={PAGES_PATH.BOARD}
+        replace
+      />
+    )
+  }
+
+  return (
+    <Navigate
+      to={PAGES_PATH.LOGIN}
+      replace
+    />
+  )
+}

@@ -1,21 +1,60 @@
 import { WebSocketServer, WebSocket } from 'ws'
 
-import { ClientInfo, Message, ResponseMessage } from './types.js'
-import { WSMessageHandler } from './ws-handlers.js'
-import { WSMessageValidator } from './ws-validators.js'
+import { ClientInfo } from './types.js'
 import { SystemLogger } from '../../logger/index.js'
 import { verifyAccessToken, type Payload } from '../../utils/token.js'
+
+type MessageHandler<T, U> = (payload: T, message: U) => Promise<void> | void
 
 // https://ably.com/blog/websocket-authentication
 export class WSServer {
   private wss: WebSocketServer
   private clients: ClientInfo[] = []
+  private handlers: Map<string, MessageHandler<any, any>> = new Map()
 
   constructor(port: number) {
     this.wss = new WebSocketServer({ port })
-    SystemLogger.info(`🚀 WebSocket server started on port ${port}`)
-
     this.init()
+    SystemLogger.info(`🚀 WebSocket server started on port ${port}`)
+  }
+
+  public on = <T, U>(type: string, handler: MessageHandler<T, U>) => {
+    this.handlers.set(type, handler)
+  }
+
+  public send = (userId: string, type: string, data: unknown) => {
+    const client = this.clients.find((c) => c.userId === userId)
+
+    if (client?.socket.readyState !== WebSocket.OPEN) {
+      return
+    }
+
+    try {
+      client.socket.send(JSON.stringify({ type, data }))
+    } catch (error) {
+      SystemLogger.error(`Error sending message to user ${userId}:`, error)
+      this.removeClient(client.socket)
+    }
+  }
+
+  public broadcast = <T = {}>(excludeUserId: string, type: string, data: T) => {
+    const message = JSON.stringify({ type, ...data })
+    this.clients.forEach((client) => {
+      if (
+        client.userId !== excludeUserId &&
+        client.socket.readyState === WebSocket.OPEN
+      ) {
+        try {
+          client.socket.send(message)
+        } catch (error) {
+          SystemLogger.error(
+            `Error broadcasting to user ${client.userId}:`,
+            error
+          )
+          this.removeClient(client.socket)
+        }
+      }
+    })
   }
 
   private init = () => {
@@ -35,10 +74,20 @@ export class WSServer {
           }
 
           this.addClient(ws, payload)
-        } catch {
+        } catch (error) {
+          SystemLogger.warn('Authentication failed:', error)
           ws.close(1003, 'Invalid init message')
         }
       })
+
+      ws.on('error', (error) => {
+        SystemLogger.error('WebSocket error:', error)
+        ws.close(1006, 'Internal error')
+      })
+    })
+
+    this.wss.on('error', (error) => {
+      SystemLogger.error('WebSocket server error:', error)
     })
   }
 
@@ -57,47 +106,40 @@ export class WSServer {
       this.removeClient(ws)
       SystemLogger.info(`WebSocket client disconnected: ${userId}`)
     })
+
+    ws.on('error', (error) => {
+      SystemLogger.error(`WebSocket error for user ${userId}:`, error)
+      this.removeClient(ws)
+    })
   }
 
   private removeClient = (socket: WebSocket) => {
     this.clients = this.clients.filter((c) => c.socket !== socket)
   }
 
-  private handleMessage = async (payload: Payload, rawMessage: string) => {
+  private handleMessage = (payload: Payload, rawMessage: string) => {
     try {
-      const data: Partial<Message> = JSON.parse(rawMessage)
+      const { type, ...data } = JSON.parse(rawMessage)
+      const handler = this.handlers.get(type)
 
-      const baseMessage = await WSMessageValidator.validateBaseMessage(data)
-      if (!baseMessage) return
+      if (!handler) {
+        SystemLogger.warn(`No handler for message type: ${type}`)
+        return
+      }
 
-      switch (baseMessage.type) {
-        case 'end': {
-          const endMessage = await WSMessageValidator.validateEndMessage(data)
-          if (endMessage) {
-            await WSMessageHandler.handleCardPosition(
-              endMessage.id,
-              endMessage.position
-            )
-          }
-          break
+      try {
+        const result = handler(payload, data)
+
+        if (result instanceof Promise) {
+          result.catch((error) => {
+            SystemLogger.error(`Async handler error for "${type}":`, error)
+          })
         }
+      } catch (error) {
+        SystemLogger.error(`Handler error for "${type}":`, error)
       }
-
-      const { id, type, position } = baseMessage
-      const message = { from: payload, id, position, type }
-
-      this.callChannels(payload.id, message as ResponseMessage)
     } catch (error) {
-      SystemLogger.error('Critical Failed to handle message')
+      SystemLogger.error('Message handling error:', error)
     }
-  }
-
-  private callChannels = (senderId: string, message: ResponseMessage) => {
-    const json = JSON.stringify(message)
-    this.clients.forEach(({ userId, socket }) => {
-      if (userId !== senderId && socket.readyState === WebSocket.OPEN) {
-        socket.send(json)
-      }
-    })
   }
 }
