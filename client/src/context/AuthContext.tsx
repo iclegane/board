@@ -21,9 +21,14 @@ type UserData = {
 type AuthContextType = {
   user: UserData | null
   isLogged: boolean
-  login: (login: string, password: string) => Promise<void>
+  login: (login: string, password: string) => Promise<LoginResponse>
   logout: () => Promise<void>
   isCheckAuthLoading: boolean
+}
+
+type LoginResponse = {
+  success: boolean
+  error?: string
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -32,14 +37,20 @@ export const AuthProvider: React.FC<AuthProvider> = ({ children }) => {
   const [user, setUser] = useState<UserData | null>(null)
   const [isCheckAuthLoading, setCheckAuthLoading] = useState(false)
 
-  const login = useCallback(async (login: string, password: string) => {
-    try {
-      const user = await AuthService.login(login, password)
-      setUser(user)
-    } catch (error) {
-      console.error('Login failed:', error)
-    }
-  }, [])
+  const login = useCallback(
+    async (login: string, password: string): Promise<LoginResponse> => {
+      try {
+        const user = await AuthService.login(login, password)
+        setUser(user)
+
+        return { success: true }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Login failed'
+        return { success: false, error: message }
+      }
+    },
+    []
+  )
 
   const logout = useCallback(async () => {
     try {

@@ -13,6 +13,7 @@ export const API_PATH = {
 } as const
 
 export const PAGES_PATH = {
+  INDEX: '/',
   LOGIN: '/login',
   CREATE: '/create',
   LOGOUT: '/logout',

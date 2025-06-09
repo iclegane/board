@@ -16,6 +16,7 @@ type FormValues = {
 
 export const LoginForm: React.FC = () => {
   const { login: loginF } = useAuth()
+  const [serverError, setServerError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const {
     register,
@@ -26,9 +27,15 @@ export const LoginForm: React.FC = () => {
   const navigate = useNavigate()
 
   const onSubmit: SubmitHandler<FormValues> = async ({ login, password }) => {
+    setServerError(null)
     setIsLoading(true)
-    await loginF(login, password)
-    navigate(PAGES_PATH.BOARD)
+    const { success, error } = await loginF(login, password)
+
+    if (success) {
+      navigate(PAGES_PATH.BOARD)
+    }
+
+    setServerError(error ?? null)
     setIsLoading(false)
   }
 
@@ -81,6 +88,12 @@ export const LoginForm: React.FC = () => {
       <Button type='submit'>Log in</Button>
 
       {isLoading && 'loading...'}
+      {serverError && (
+        <Plate
+          status='error'
+          text={serverError}
+        />
+      )}
     </form>
   )
 }

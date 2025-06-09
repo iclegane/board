@@ -24,11 +24,7 @@ api.interceptors.response.use(
   async (error) => {
     const requestUrl = error.config.url
 
-    if (
-      error.response?.status === 401 &&
-      requestUrl !== API_PATH.REFRESH &&
-      requestUrl !== API_PATH.CHECK
-    ) {
+    if (error.response?.status === 401 && requestUrl !== API_PATH.REFRESH) {
       if (!refreshTokenPromise) {
         refreshTokenPromise = AuthService.refresh().finally(() => {
           refreshTokenPromise = null

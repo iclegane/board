@@ -1,3 +1,4 @@
+import axios from 'axios'
 import React, { useState } from 'react'
 import { type SubmitHandler, useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router'
@@ -17,6 +18,7 @@ type FormValues = {
 
 export const CreateAccountForm: React.FC = () => {
   const navigate = useNavigate()
+  const [serverError, setServerError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const {
     register,
@@ -25,18 +27,28 @@ export const CreateAccountForm: React.FC = () => {
   } = useForm<FormValues>()
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
+    setServerError(null)
     setIsLoading(true)
-    await api
-      .post(API_PATH.CREATE, data)
-      .then(() => {
-        navigate(PAGES_PATH.CREATE)
-      })
-      .catch(() => {
-        alert('create error')
-      })
-      .finally(() => {
-        setIsLoading(false)
-      })
+
+    try {
+      await api.post(API_PATH.CREATE, data)
+      navigate(PAGES_PATH.LOGIN)
+    } catch (error) {
+      let errorMessage = 'Create account failed'
+
+      if (axios.isAxiosError(error)) {
+        errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          'Create account failed'
+      } else if (error instanceof Error) {
+        errorMessage = error.message
+      }
+
+      setServerError(errorMessage)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -108,6 +120,12 @@ export const CreateAccountForm: React.FC = () => {
       <Button type={'submit'}>Create account</Button>
 
       {isLoading && 'loading...'}
+      {serverError && (
+        <Plate
+          status='error'
+          text={serverError}
+        />
+      )}
     </form>
   )
 }
