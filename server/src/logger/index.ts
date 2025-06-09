@@ -26,4 +26,4 @@ const logger = createLogger({
   ],
 })
 
-export default logger
+export const SystemLogger = logger

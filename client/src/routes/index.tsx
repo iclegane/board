@@ -5,10 +5,17 @@ import { PAGES_PATH } from '@/constants'
 import { useAuth } from '@/context/AuthContext.tsx'
 
 export const AuthOnly: React.FC = () => {
-  const { isLogged } = useAuth()
-  return isLogged ? (
-    <Outlet />
-  ) : (
+  const { isLogged, isCheckAuthLoading } = useAuth()
+
+  if (isCheckAuthLoading) {
+    return null
+  }
+
+  if (isLogged) {
+    return <Outlet />
+  }
+
+  return (
     <Navigate
       to={PAGES_PATH.LOGIN}
       replace
@@ -17,13 +24,44 @@ export const AuthOnly: React.FC = () => {
 }
 
 export const GuestOnly: React.FC = () => {
-  const { isLogged } = useAuth()
-  return isLogged ? (
+  const { isLogged, isCheckAuthLoading } = useAuth()
+
+  if (isCheckAuthLoading) {
+    return null
+  }
+
+  if (isLogged) {
+    return (
+      <Navigate
+        to={PAGES_PATH.BOARD}
+        replace
+      />
+    )
+  }
+
+  return <Outlet />
+}
+
+export const RootRedirect: React.FC = () => {
+  const { isLogged, isCheckAuthLoading } = useAuth()
+
+  if (isCheckAuthLoading) {
+    return null
+  }
+
+  if (isLogged) {
+    return (
+      <Navigate
+        to={PAGES_PATH.BOARD}
+        replace
+      />
+    )
+  }
+
+  return (
     <Navigate
-      to={PAGES_PATH.BOARD}
+      to={PAGES_PATH.LOGIN}
       replace
     />
-  ) : (
-    <Outlet />
   )
 }

@@ -8,6 +8,7 @@ import { User } from '../models/User.js'
 import {
   generateAccessToken,
   generateRefreshToken,
+  verifyAccessToken,
   verifyRefreshToken,
 } from '../utils/token.js'
 import { registerSchema, loginSchema } from '../validations/authValidation.js'
@@ -42,7 +43,11 @@ router.post('/login', validate(loginSchema), async (req, res) => {
 
     res.setHeader('Authorization', `Bearer ${accessToken}`)
 
-    const response = new SuccessResponse(accessToken)
+    const response = new SuccessResponse({
+      accessToken,
+      id: user.id,
+      login,
+    })
     res.status(HTTP_STATUS.OK).json(response)
   } catch {
     const response = new ErrorResponse('Server error')
@@ -114,11 +119,17 @@ router.post('/refresh', async (req, res) => {
       return
     }
 
-    const accessToken = generateAccessToken(payload.id, payload.login)
+    const { id, login } = payload
+
+    const accessToken = generateAccessToken(id, login)
 
     res.setHeader('Authorization', `Bearer ${accessToken}`)
 
-    const response = new SuccessResponse(accessToken)
+    const response = new SuccessResponse({
+      accessToken,
+      id,
+      login,
+    })
     res.status(HTTP_STATUS.OK).json(response)
   } catch {
     const response = new ErrorResponse('Server error')
@@ -126,4 +137,32 @@ router.post('/refresh', async (req, res) => {
   }
 })
 
-export default router
+router.post('/check', async (req, res) => {
+  try {
+    const [_bearerPrefix, accessToken] =
+      req.headers.authorization?.split(' ') ?? []
+
+    if (!accessToken) {
+      const response = new ErrorResponse('Unauthorized')
+      res.status(HTTP_STATUS.UNAUTHORIZED).json(response)
+      return
+    }
+
+    const payload = verifyAccessToken(accessToken)
+    if (!payload) {
+      const response = new ErrorResponse('Unauthorized')
+      res.status(HTTP_STATUS.UNAUTHORIZED).json(response)
+      return
+    }
+
+    const { id, login } = payload
+
+    const response = new SuccessResponse({ id, login })
+    res.status(HTTP_STATUS.OK).json(response)
+  } catch {
+    const response = new ErrorResponse('Server error')
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json(response)
+  }
+})
+
+export const authRouter = router

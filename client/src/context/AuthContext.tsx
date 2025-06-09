@@ -13,47 +13,74 @@ type AuthProvider = {
   children: React.ReactNode
 }
 
+type UserData = {
+  id: string
+  login: string
+}
+
 type AuthContextType = {
+  user: UserData | null
   isLogged: boolean
-  login: (login: string, password: string) => Promise<void>
+  login: (login: string, password: string) => Promise<LoginResponse>
   logout: () => Promise<void>
+  isCheckAuthLoading: boolean
+}
+
+type LoginResponse = {
+  success: boolean
+  error?: string
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
 export const AuthProvider: React.FC<AuthProvider> = ({ children }) => {
-  const [isLogged, setIsLogged] = useState(false)
+  const [user, setUser] = useState<UserData | null>(null)
+  const [isCheckAuthLoading, setCheckAuthLoading] = useState(false)
 
-  const login = useCallback(async (login: string, password: string) => {
-    try {
-      await AuthService.login(login, password)
-      setIsLogged(true)
-    } catch (error) {
-      console.error('Login failed:', error)
-    }
-  }, [])
+  const login = useCallback(
+    async (login: string, password: string): Promise<LoginResponse> => {
+      try {
+        const user = await AuthService.login(login, password)
+        setUser(user)
+
+        return { success: true }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Login failed'
+        return { success: false, error: message }
+      }
+    },
+    []
+  )
 
   const logout = useCallback(async () => {
     try {
       await AuthService.logout()
     } finally {
-      setIsLogged(false)
+      setUser(null)
     }
   }, [])
 
   const value = useMemo(
-    () => ({ login, logout, isLogged }),
-    [login, logout, isLogged]
+    () => ({
+      login,
+      logout,
+      isLogged: Boolean(user),
+      user,
+      isCheckAuthLoading,
+    }),
+    [login, logout, user, isCheckAuthLoading]
   )
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const token = await AuthService.refresh()
-
-        setIsLogged(Boolean(token))
+        setCheckAuthLoading(true)
+        const user = await AuthService.check()
+        setUser(user)
       } catch {
-        setIsLogged(false)
+        setUser(null)
+      } finally {
+        setCheckAuthLoading(false)
       }
     }
     checkAuth()

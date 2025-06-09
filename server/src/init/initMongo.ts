@@ -1,5 +1,14 @@
-import { Mongo } from '../service/Mongo.js'
+import mongoose from 'mongoose'
 
-export function initMongo(url: string) {
-  return new Mongo(url)
+import { SystemLogger } from '../logger/index.js'
+
+export const initMongo = async (url: string) => {
+  try {
+    await mongoose.connect(url)
+
+    SystemLogger.info(`🚀 [MongoDB] Connection established`)
+  } catch (error) {
+    SystemLogger.error(`🛑 [MongoDB] Connection failed`)
+    throw error
+  }
 }

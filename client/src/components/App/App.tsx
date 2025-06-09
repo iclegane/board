@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router'
 
 import { PAGES_PATH } from '@/constants'
 import { Board, NotFound, Login, CreateAccount, Logout } from '@/pages'
-import { AuthOnly, GuestOnly } from '@/routes'
+import { AuthOnly, GuestOnly, RootRedirect } from '@/routes'
 
 import './App.css'
 
@@ -11,6 +11,11 @@ export const App: React.FC = () => {
   return (
     <BrowserRouter>
       <Routes>
+        <Route
+          path={PAGES_PATH.INDEX}
+          element={<RootRedirect />}
+        />
+
         <Route element={<AuthOnly />}>
           <Route
             path={PAGES_PATH.BOARD}
