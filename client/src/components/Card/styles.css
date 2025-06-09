@@ -29,3 +29,13 @@
 
   margin-top: 10px;
 }
+
+.badge {
+  position: absolute;
+  top: -25px;
+  border: 1px solid #50b5ff;
+  width: 100%;
+  left: 0;
+  background: whitesmoke;
+  padding: 0px 5px;
+}

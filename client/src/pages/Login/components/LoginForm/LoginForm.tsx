@@ -1,51 +1,99 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { useForm, type SubmitHandler } from 'react-hook-form'
+import { useNavigate } from 'react-router'
 
 import { Button, Input, Password } from '@/components'
-import { useField } from '@/hooks'
+import { Plate } from '@/components/ui/Plate'
+import { PAGES_PATH } from '@/constants'
+import { useAuth } from '@/context/AuthContext.tsx'
 
 import './styles.css'
 
-export const LoginForm: React.FC<{}> = () => {
-  const login = useField<string | undefined>({
-    validator: (value) => !!value && value.length > 0,
-  })
-  const password = useField<string | undefined>({
-    validator: (value) => !!value && value.length > 0,
-  })
+type FormValues = {
+  login: string
+  password: string
+}
 
-  const isSubmitDisabled = login.isError || password.isError
+export const LoginForm: React.FC = () => {
+  const { login: loginF } = useAuth()
+  const [serverError, setServerError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>()
 
-  const handleOnFormSubmit = (e: React.FormEvent<HTMLFormElement>) =>
-    e.preventDefault()
+  const navigate = useNavigate()
+
+  const onSubmit: SubmitHandler<FormValues> = async ({ login, password }) => {
+    setServerError(null)
+    setIsLoading(true)
+    const { success, error } = await loginF(login, password)
+
+    if (success) {
+      navigate(PAGES_PATH.BOARD)
+    }
+
+    setServerError(error ?? null)
+    setIsLoading(false)
+  }
 
   return (
     <form
       name='login-form'
-      onSubmit={handleOnFormSubmit}
-      className={'login-form'}
+      className='login-form'
+      onSubmit={handleSubmit(onSubmit)}
     >
       <Input
-        value={login.value}
-        status={login.isError ? 'error' : undefined}
-        onChange={login.handleChange}
-        name={'login'}
+        {...register('login', {
+          required: 'Login is required',
+          minLength: {
+            value: 3,
+            message: 'Login must be at least 3 characters',
+          },
+          pattern: {
+            value: /^[a-zA-Z0-9_]+$/,
+            message: 'Invalid login format',
+          },
+        })}
         placeholder='Login'
+        status={errors.login ? 'error' : 'default'}
       />
+      {errors.login && (
+        <Plate
+          status='error'
+          text={errors.login.message}
+        />
+      )}
       <Password
-        value={password.value}
-        status={password.isError ? 'error' : undefined}
-        onChange={password.handleChange}
-        name={'password'}
-        showPasswordBtn
+        {...register('password', {
+          required: 'Password is required',
+          minLength: {
+            value: 6,
+            message: 'Password must be at least 6 characters',
+          },
+        })}
         placeholder='Password'
+        status={errors.password ? 'error' : 'default'}
+        showPasswordBtn
       />
+      {errors.password && (
+        <Plate
+          status='error'
+          text={errors.password.message}
+        />
+      )}
 
-      <Button
-        type={'submit'}
-        disabled={isSubmitDisabled}
-      >
-        Log in
-      </Button>
+      <Button type='submit'>Log in</Button>
+
+      {isLoading && 'loading...'}
+      {serverError && (
+        <Plate
+          status='error'
+          text={serverError}
+        />
+      )}
     </form>
   )
 }

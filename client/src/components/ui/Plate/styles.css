@@ -1,0 +1,38 @@
+.plate {
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    display: inline-block;
+    text-align: center;
+    min-width: 120px;
+}
+
+.plate-default {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.plate-error {
+    background-color: #ffe5e5;
+    color: #d32f2f;
+    border: 1px solid #d32f2f;
+}
+
+.plate-success {
+    background-color: #e5ffe5;
+    color: #388e3c;
+    border: 1px solid #388e3c;
+}
+
+.plate-warning {
+    background-color: #fff4e5;
+    color: #f57c00;
+    border: 1px solid #f57c00;
+}
+
+.plate-info {
+    background-color: #e5f4ff;
+    color: #1976d2;
+    border: 1px solid #1976d2;
+}
