@@ -2,9 +2,10 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 import { api } from '@/api/axios'
 import { Card, Menu, RightMenu } from '@/components'
-import { API_PATH } from '@/constants'
+import { API_PATH, WS_TYPES } from '@/constants'
 import { useLatest } from '@/hooks'
 import { CursorSharing } from '@/pages/Board/components'
+import { type Message, WebSocketService } from '@/service/WebSocket.ts'
 import { Position } from '@/types'
 import { rafThrottle } from '@/utils'
 
@@ -86,26 +87,18 @@ export const Board: React.FC = () => {
   }
 
   const handleAddCard = async () => {
-    try {
-      const name = 'Card'
-      const x = (-position.x + (window.innerWidth - cardWidth) / 2) / zoom
-      const y = (-position.y + (window.innerHeight - cardHeight) / 2) / zoom
-      const response = await api.post('/board/card', { name, x, y })
-      const id = response.data.payload.id
-      setCards((prev) => [
-        ...prev,
-        {
-          id,
-          name,
-          coordinates: {
-            x,
-            y,
-          },
+    console.log((-position.x + (window.innerWidth - cardWidth) / 2) / zoom)
+    console.log((-position.y + (window.innerHeight - cardHeight) / 2) / zoom)
+    WebSocketService.send({
+      type: WS_TYPES.CARD.CREATE,
+      data: {
+        name: 'Card',
+        position: {
+          x: (-position.x + (window.innerWidth - cardWidth) / 2) / zoom,
+          y: (-position.y + (window.innerHeight - cardHeight) / 2) / zoom,
         },
-      ])
-    } catch (e) {
-      console.log(e)
-    }
+      },
+    })
   }
 
   const handleEditCardText = useCallback((id: string, text?: string) => {
@@ -190,6 +183,33 @@ export const Board: React.FC = () => {
     }
 
     getCards()
+  }, [])
+
+  // Подписка на создание карточки
+  useEffect(() => {
+    const handleMessage = (msg: Message) => {
+      if (msg.type !== WS_TYPES.CARD.CREATED) {
+        return
+      }
+
+      const { id, name, x, y } = msg.data ?? {}
+      setCards((prev) => [
+        ...prev,
+        {
+          id,
+          name,
+          coordinates: {
+            x,
+            y,
+          },
+        },
+      ])
+    }
+
+    WebSocketService.onMessage(handleMessage)
+    return () => {
+      WebSocketService.offMessage(handleMessage)
+    }
   }, [])
 
   return (

@@ -7,7 +7,9 @@ import React, {
   useState,
 } from 'react'
 
+import { WS_TYPES } from '@/constants'
 import { AuthService } from '@/service/Auth.ts'
+import { type ResponseMessage, WebSocketService } from '@/service/WebSocket.ts'
 
 type AuthProvider = {
   children: React.ReactNode
@@ -60,6 +62,18 @@ export const AuthProvider: React.FC<AuthProvider> = ({ children }) => {
     }
   }, [])
 
+  const checkAuth = useCallback(async () => {
+    try {
+      setCheckAuthLoading(true)
+      const user = await AuthService.check()
+      setUser(user)
+    } catch {
+      setUser(null)
+    } finally {
+      setCheckAuthLoading(false)
+    }
+  }, [])
+
   const value = useMemo(
     () => ({
       login,
@@ -72,19 +86,22 @@ export const AuthProvider: React.FC<AuthProvider> = ({ children }) => {
   )
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        setCheckAuthLoading(true)
-        const user = await AuthService.check()
-        setUser(user)
-      } catch {
-        setUser(null)
-      } finally {
-        setCheckAuthLoading(false)
-      }
-    }
     checkAuth()
-  }, [])
+  }, [checkAuth])
+
+  useEffect(() => {
+    const handleOnMessage = async (message: ResponseMessage) => {
+      if (message.type !== WS_TYPES.AUTH.REFRESH) {
+        return
+      }
+
+      checkAuth()
+    }
+    WebSocketService.onMessage(handleOnMessage)
+    return () => {
+      WebSocketService.offMessage(handleOnMessage)
+    }
+  }, [checkAuth])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

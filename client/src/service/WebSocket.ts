@@ -1,8 +1,16 @@
-import { ACCESS_TOKEN_KEY, WS_URL } from '@/constants'
+import { ACCESS_TOKEN_KEY, WS_TYPES, WS_URL } from '@/constants'
 import { QueueService } from '@/service/Queue.ts'
 
-export type Message = { type: string; [key: string]: any }
-type Callback = (message: Message) => void
+export type Message = { type: string; data: { [key: string]: any } }
+export type ResponseMessage = Message & {
+  from: {
+    id: string
+    login: string
+    expiresIn: number
+  }
+}
+
+type Callback = (message: ResponseMessage) => void
 
 class WS {
   private socket!: WebSocket
@@ -29,13 +37,13 @@ class WS {
 
     this.socket.onopen = () => {
       this.reconnectAttempts = 0
-      this.send({ type: 'auth', token })
+      this.send({ type: WS_TYPES.AUTH.INIT, data: { token } })
       this.flushQueue()
     }
 
     this.socket.onmessage = (event) => {
       try {
-        const data: Message = JSON.parse(event.data)
+        const data: ResponseMessage = JSON.parse(event.data)
         this.listeners.forEach((cb) => cb(data))
       } catch {
         console.error('Invalid JSON:', event.data)

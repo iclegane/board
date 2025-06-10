@@ -1,9 +1,13 @@
 import { WebSocketServer, WebSocket } from 'ws'
 
-import { ClientInfo } from './types.js'
+import { ClientInfo, RequestMessage, ResponseMessage } from './types.js'
+import { WS_TYPES } from '../../constants/WS.js'
 import { SystemLogger } from '../../logger/index.js'
 import { verifyAccessToken, type Payload } from '../../utils/token.js'
 
+type PayloadWithToken = Payload & {
+  token: string
+}
 type MessageHandler<T, U> = (payload: T, message: U) => Promise<void> | void
 
 // https://ably.com/blog/websocket-authentication
@@ -22,7 +26,11 @@ export class WSServer {
     this.handlers.set(type, handler)
   }
 
-  public send = (userId: string, type: string, data: unknown) => {
+  public send = (
+    userId: string,
+    type: string,
+    data: ResponseMessage['data']
+  ) => {
     const client = this.clients.find((c) => c.userId === userId)
 
     if (client?.socket.readyState !== WebSocket.OPEN) {
@@ -37,15 +45,19 @@ export class WSServer {
     }
   }
 
-  public broadcast = <T = {}>(excludeUserId: string, type: string, data: T) => {
-    const message = JSON.stringify({ type, ...data })
+  public broadcast = (
+    excludeUserId: string,
+    type: string,
+    data: ResponseMessage,
+    sendAll = false
+  ) => {
     this.clients.forEach((client) => {
       if (
-        client.userId !== excludeUserId &&
+        (client.userId !== excludeUserId || sendAll) &&
         client.socket.readyState === WebSocket.OPEN
       ) {
         try {
-          client.socket.send(message)
+          client.socket.send(JSON.stringify({ type, ...data }))
         } catch (error) {
           SystemLogger.error(
             `Error broadcasting to user ${client.userId}:`,
@@ -61,19 +73,22 @@ export class WSServer {
     this.wss.on('connection', (ws: WebSocket) => {
       ws.once('message', (rawMessage) => {
         try {
-          const data = JSON.parse(rawMessage.toString())
-          if (data.type !== 'auth' || typeof data.token !== 'string') {
+          const {
+            type,
+            data: { token },
+          } = JSON.parse(rawMessage.toString()) as RequestMessage
+          if (type !== WS_TYPES.AUTH.INIT || typeof token !== 'string') {
             ws.close(1008, 'Authentication Error')
             return
           }
 
-          const payload = verifyAccessToken(data.token)
+          const payload = verifyAccessToken(token)
           if (!payload) {
             ws.close(1008, 'Authentication Error')
             return
           }
 
-          this.addClient(ws, payload)
+          this.addClient(ws, { ...payload, token })
         } catch (error) {
           SystemLogger.warn('Authentication failed:', error)
           ws.close(1003, 'Invalid init message')
@@ -91,14 +106,21 @@ export class WSServer {
     })
   }
 
-  private addClient = (ws: WebSocket, payload: Payload) => {
-    const { id: userId } = payload
+  private addClient = (ws: WebSocket, payload: PayloadWithToken) => {
+    const { id: userId, token } = payload
     SystemLogger.info(`WebSocket client connected: ${userId}`)
 
     const clientInfo: ClientInfo = { userId, socket: ws }
     this.clients.push(clientInfo)
 
     ws.on('message', (rawMsg) => {
+      const verify = verifyAccessToken(token)
+      if (!verify) {
+        this.send(userId, WS_TYPES.AUTH.REFRESH, {})
+        ws.close(1008, 'Authentication Error')
+        return
+      }
+
       this.handleMessage(payload, rawMsg.toString())
     })
 
@@ -119,7 +141,7 @@ export class WSServer {
 
   private handleMessage = (payload: Payload, rawMessage: string) => {
     try {
-      const { type, ...data } = JSON.parse(rawMessage)
+      const { type, data } = JSON.parse(rawMessage) as RequestMessage
       const handler = this.handlers.get(type)
 
       if (!handler) {
