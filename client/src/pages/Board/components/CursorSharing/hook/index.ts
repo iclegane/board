@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 
+import { WS_TYPES } from '@/constants'
 import { useLatest } from '@/hooks'
-import { WebSocketService, type Message } from '@/service/WebSocket.ts'
+import { WebSocketService, type ResponseMessage } from '@/service/WebSocket.ts'
 import { rafThrottle } from '@/utils/throttle.ts'
 
 type CursorData = {
@@ -33,10 +34,12 @@ export const useCursorSharing = ({
       const relativeY = (event.clientY - y.current) / zoomCb.current
 
       WebSocketService.send({
-        type: 'cursor_move',
-        position: {
-          x: relativeX,
-          y: relativeY,
+        type: WS_TYPES.CURSOR.MOVE,
+        data: {
+          position: {
+            x: relativeX,
+            y: relativeY,
+          },
         },
       })
     }
@@ -48,17 +51,20 @@ export const useCursorSharing = ({
   }, [])
 
   useEffect(() => {
-    const handleOnMessage = (message: Message) => {
-      if (message.type === 'cursor_move') {
-        setRemoteCursors((prev) => ({
-          ...prev,
-          [message.from.id]: {
-            login: message.from.login,
-            x: message.position.x,
-            y: message.position.y,
-          },
-        }))
+    const handleOnMessage = (message: ResponseMessage) => {
+      if (message.type !== WS_TYPES.CURSOR.MOVED) {
+        return
       }
+
+      const { login } = message.from
+      const { position } = message.data
+      setRemoteCursors((prev) => ({
+        ...prev,
+        [message.from.id]: {
+          login,
+          ...position,
+        },
+      }))
     }
 
     WebSocketService.onMessage(handleOnMessage)

@@ -12,13 +12,12 @@ export type Position = {
   y: number
 }
 
-// Todo Сделать шаблонный тип для message
-export type Message = {
-  id?: string
-  type: 'start' | 'move' | 'end'
-  position: Position
-}
-
 export type ResponseMessage = {
   from: Payload
-} & Message
+  data: { [key: string]: unknown }
+}
+
+export type RequestMessage = {
+  type: string
+  data: { [key: string]: unknown }
+}

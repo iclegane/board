@@ -21,3 +21,19 @@ export const PAGES_PATH = {
 } as const
 
 export const ACCESS_TOKEN_KEY = 'accessToken'
+
+export const WS_TYPES = {
+  CARD: {
+    CREATED: 'card:created',
+    CREATE: 'card:create',
+    DRAG: {
+      START: 'card:drag:start',
+      STARTED: 'card:drag:started',
+      MOVE: 'card:drag:move',
+      MOVED: 'card:drag:moved',
+      END: 'card:drag:end',
+      ENDED: 'card:drag:ended',
+    },
+  },
+  CURSOR: { MOVE: 'cursor:move', MOVED: 'cursor:moved' },
+} as const

@@ -2,8 +2,9 @@ import React, { useState, useRef, useEffect, memo } from 'react'
 
 import { EditArea } from './components'
 
+import { WS_TYPES } from '@/constants'
 import { useLatest } from '@/hooks'
-import { WebSocketService, type Message } from '@/service/WebSocket.ts'
+import { WebSocketService, type ResponseMessage } from '@/service/WebSocket.ts'
 import { Position } from '@/types'
 import { rafThrottle } from '@/utils'
 
@@ -32,7 +33,7 @@ export const Card = memo(
     const tempPositionRef = useLatest(tempPosition)
 
     const [isRemoteDragging, setIsRemoteDragging] = useState(false)
-    const [remoteLogin, setRemoteLogin] = useState(null)
+    const [remoteLogin, setRemoteLogin] = useState<string | null>(null)
 
     const position = tempPosition ?? coordinates
 
@@ -46,9 +47,11 @@ export const Card = memo(
       lastPosition.current = { x: event.clientX, y: event.clientY }
 
       WebSocketService.send({
-        type: 'start',
-        id,
-        position: coordinates,
+        type: WS_TYPES.CARD.DRAG.START,
+        data: {
+          id,
+          position: coordinates,
+        },
       })
     }
 
@@ -65,7 +68,14 @@ export const Card = memo(
 
         const x = prev.x + deltaX / zoom
         const y = prev.y + deltaY / zoom
-        WebSocketService.send({ type: 'move', id, position: { x, y } })
+
+        WebSocketService.send({
+          type: WS_TYPES.CARD.DRAG.MOVE,
+          data: {
+            id,
+            position: { x, y },
+          },
+        })
         return { x, y }
       })
       lastPosition.current = { x: event.clientX, y: event.clientY }
@@ -78,9 +88,11 @@ export const Card = memo(
         onMoveEnd(id, { ...tempPosition })
         setTempPosition(null)
         WebSocketService.send({
-          type: 'end',
-          id,
-          position: tempPosition,
+          type: WS_TYPES.CARD.DRAG.END,
+          data: {
+            id,
+            position: tempPosition,
+          },
         })
       }
     }
@@ -150,9 +162,11 @@ export const Card = memo(
           setTempPosition(null)
 
           WebSocketService.send({
-            type: 'end',
-            id,
-            position: coordinates,
+            type: WS_TYPES.CARD.DRAG.END,
+            data: {
+              id,
+              position: coordinates,
+            },
           })
         }
       }
@@ -166,26 +180,31 @@ export const Card = memo(
 
     // Подписка WebSocketService
     useEffect(() => {
-      const handleMessage = (msg: Message) => {
-        if (idRef.current === msg.id) {
-          setRemoteLogin(msg.from.login)
-          if (msg.type === 'start' || msg.type === 'move') {
-            setTempPosition(msg.position)
-            setIsRemoteDragging(true)
-          }
+      const handleMessage = ({ type, from, data }: ResponseMessage) => {
+        if (idRef.current !== data.id) {
+          return
+        }
 
-          if (msg.type === 'end') {
-            setTempPosition(msg.position)
-            setIsRemoteDragging(false)
-            setRemoteLogin(null)
+        setRemoteLogin(from.login)
 
-            if (tempPositionRef.current) {
-              onMoveEnd(id, { ...tempPositionRef.current })
-            }
+        if (
+          type === WS_TYPES.CARD.DRAG.STARTED ||
+          type === WS_TYPES.CARD.DRAG.MOVED
+        ) {
+          setTempPosition(data.position)
+          setIsRemoteDragging(true)
+        }
+
+        if (type === WS_TYPES.CARD.DRAG.ENDED) {
+          setTempPosition(data.position)
+          setIsRemoteDragging(false)
+          setRemoteLogin(null)
+
+          if (tempPositionRef.current) {
+            onMoveEnd(id, { ...tempPositionRef.current })
           }
         }
       }
-
       WebSocketService.onMessage(handleMessage)
       return () => {
         WebSocketService.offMessage(handleMessage)
