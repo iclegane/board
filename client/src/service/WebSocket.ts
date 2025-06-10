@@ -1,4 +1,4 @@
-import { ACCESS_TOKEN_KEY, WS_URL } from '@/constants'
+import { ACCESS_TOKEN_KEY, WS_TYPES, WS_URL } from '@/constants'
 import { QueueService } from '@/service/Queue.ts'
 
 export type Message = { type: string; data: { [key: string]: any } }
@@ -37,7 +37,7 @@ class WS {
 
     this.socket.onopen = () => {
       this.reconnectAttempts = 0
-      this.send({ type: 'auth', data: { token } })
+      this.send({ type: WS_TYPES.AUTH.INIT, data: { token } })
       this.flushQueue()
     }
 

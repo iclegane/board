@@ -19,4 +19,8 @@ export const WS_TYPES = {
     MOVE: 'cursor:move',
     MOVED: 'cursor:moved',
   },
+  AUTH: {
+    INIT: 'auth:init',
+    REFRESH: 'auth:refresh',
+  },
 } as const

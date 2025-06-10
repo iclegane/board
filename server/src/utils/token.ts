@@ -39,14 +39,14 @@ const decrypt = (token: string, secretKey: string): Payload | null => {
 
 export const generateAccessToken = (userId: string, login: string): string => {
   return encrypt(
-    { id: userId, login, expiresIn: dayjs().add(500, 'seconds').unix() },
+    { id: userId, login, expiresIn: dayjs().add(5, 'minutes').unix() },
     process.env.JWT_ACCESS_SECRET_KEY!
   )
 }
 
 export const generateRefreshToken = (userId: string, login: string): string => {
   return encrypt(
-    { id: userId, login, expiresIn: dayjs().add(10, 'seconds').unix() },
+    { id: userId, login, expiresIn: dayjs().add(30, 'minutes').unix() },
     process.env.JWT_REFRESH_SECRET_KEY!
   )
 }

@@ -23,6 +23,10 @@ export const PAGES_PATH = {
 export const ACCESS_TOKEN_KEY = 'accessToken'
 
 export const WS_TYPES = {
+  AUTH: {
+    INIT: 'auth:init',
+    REFRESH: 'auth:refresh',
+  },
   CARD: {
     CREATED: 'card:created',
     CREATE: 'card:create',

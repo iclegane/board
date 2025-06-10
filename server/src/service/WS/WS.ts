@@ -1,9 +1,13 @@
 import { WebSocketServer, WebSocket } from 'ws'
 
 import { ClientInfo, RequestMessage, ResponseMessage } from './types.js'
+import { WS_TYPES } from '../../constants/WS.js'
 import { SystemLogger } from '../../logger/index.js'
 import { verifyAccessToken, type Payload } from '../../utils/token.js'
 
+type PayloadWithToken = Payload & {
+  token: string
+}
 type MessageHandler<T, U> = (payload: T, message: U) => Promise<void> | void
 
 // https://ably.com/blog/websocket-authentication
@@ -73,7 +77,7 @@ export class WSServer {
             type,
             data: { token },
           } = JSON.parse(rawMessage.toString()) as RequestMessage
-          if (type !== 'auth' || typeof token !== 'string') {
+          if (type !== WS_TYPES.AUTH.INIT || typeof token !== 'string') {
             ws.close(1008, 'Authentication Error')
             return
           }
@@ -84,7 +88,7 @@ export class WSServer {
             return
           }
 
-          this.addClient(ws, payload)
+          this.addClient(ws, { ...payload, token })
         } catch (error) {
           SystemLogger.warn('Authentication failed:', error)
           ws.close(1003, 'Invalid init message')
@@ -102,14 +106,21 @@ export class WSServer {
     })
   }
 
-  private addClient = (ws: WebSocket, payload: Payload) => {
-    const { id: userId } = payload
+  private addClient = (ws: WebSocket, payload: PayloadWithToken) => {
+    const { id: userId, token } = payload
     SystemLogger.info(`WebSocket client connected: ${userId}`)
 
     const clientInfo: ClientInfo = { userId, socket: ws }
     this.clients.push(clientInfo)
 
     ws.on('message', (rawMsg) => {
+      const verify = verifyAccessToken(token)
+      if (!verify) {
+        this.send(userId, WS_TYPES.AUTH.REFRESH, {})
+        ws.close(1008, 'Authentication Error')
+        return
+      }
+
       this.handleMessage(payload, rawMsg.toString())
     })
 
